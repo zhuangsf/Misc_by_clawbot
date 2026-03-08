@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-03-07T21:06:19.650577",
+  "total": 1,
+  "success": 1,
+  "videos": [
+    {
+      "timestamp": "2026-03-07T21:06:06.995500",
+      "hook_type": "speak_for_me",
+      "content": "你假装不在乎的样子。\n其实最让人心疼。\n因为你比谁都在乎，只是没人看见。\n#越假装越让人心疼",
+      "hook": "你假装不在乎的样子。\n其实最让人心疼。\n因为你比谁都在乎，只是没人看见。\n#越假装越让人心疼",
+      "audio": "/root/.openclaw/workspace/douyin_emo/output/audio/tts_20260307_210606.mp3",
+      "video": "/root/.openclaw/workspace/douyin_emo/output/videos/emo_20260307_210610.mp4",
+      "bgm": null,
+      "duration": 13.142857142857142
+    }
+  ]
+}

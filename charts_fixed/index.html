@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 K线图表分析器 - 小龙虾多功能平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .back-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #5a6fd6;
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header p {
+            color: #4a5568;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            text-align: center;
+        }
+        
+        .chart-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: #4299e1;
+        }
+        
+        .chart-card h2 {
+            font-size: 1.6rem;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .chart-info {
+            color: #4a5568;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .features {
+            list-style: none;
+            margin-top: 15px;
+            text-align: left;
+        }
+        
+        .features li {
+            padding: 6px 0;
+            color: #4a5568;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .features li:before {
+            content: "✅";
+            font-size: 0.8rem;
+        }
+        
+        .back-button {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 25px;
+            background: #4299e1;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-btn">🏠 返回首页</a>
+            <h1>
+                <span>📈</span>
+                K线图表分析器
+                <span>🦞</span>
+            </h1>
+            <p>
+                天才产品庄庄的K线图表分析平台 | 查看ETH、BTC、SOL、XAG的K线图表，标注买入卖出点，分析交易历史
+            </p>
+        </div>
+        
+        <div class="charts-grid">
+            <a href="BTC_USDT_kline_fixed.html" class="chart-card">
+                <h2>💰 BTC-USDT</h2>
+                <div class="chart-info">
+                    比特币/泰达币 K线图表<br>
+                    小时线级别分析，标注买卖点
+                </div>
+                <ul class="features">
+                    <li>比特币主力合约K线图</li>
+                    <li>买入卖出点清晰标注</li>
+                    <li>交易历史可视化</li>
+                    <li>价格趋势分析</li>
+                </ul>
+            </a>
+            
+            <a href="ETH_USDT_kline_fixed.html" class="chart-card">
+                <h2>🔵 ETH-USDT</h2>
+                <div class="chart-info">
+                    以太坊/泰达币 K线图表<br>
+                    小时线级别分析，标注买卖点
+                </div>
+                <ul class="features">
+                    <li>以太坊主力合约K线图</li>
+                    <li>买入卖出点清晰标注</li>
+                    <li>成交量变化分析</li>
+                    <li>价格支撑阻力位</li>
+                </ul>
+            </a>
+            
+            <a href="SOL_USDT_kline_fixed.html" class="chart-card">
+                <h2>🟣 SOL-USDT</h2>
+                <div class="chart-info">
+                    索拉纳/泰达币 K线图表<br>
+                    小时线级别分析，标注买卖点
+                </div>
+                <ul class="features">
+                    <li>Solana主力合约K线图</li>
+                    <li>买入卖出点清晰标注</li>
+                    <li>波动性分析</li>
+                    <li>趋势线分析</li>
+                </ul>
+            </a>
+            
+            <div class="chart-card" style="border: 2px dashed #a0aec0; cursor: not-allowed; opacity: 0.7;">
+                <h2>🟡 XAG-USDT</h2>
+                <div class="chart-info">
+                    白银/泰达币 K线图表<br>
+                    <span style="color: #e53e3e;">待完善 - 需要确认交易平台</span>
+                </div>
+                <ul class="features">
+                    <li>白银交易对K线图</li>
+                    <li>买入卖出点标注</li>
+                    <li>价格范围: 109-119 USDT</li>
+                    <li>交易时间: 2026年1月</li>
+                </ul>
+                <div style="margin-top: 15px; padding: 8px; background: #fff5f5; border-radius: 6px; color: #e53e3e; font-size: 0.9rem;">
+                    需要确认XAGUSDT的交易平台和API
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" class="back-button">
+                🔙 返回小龙虾多功能平台
+            </a>
+            <a href="/market_monitor" class="back-button" style="background: #48bb78; margin-left: 10px;">
+                📊 查看市场监控
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>🦞 小龙虾智能助手 | 为天才产品庄庄定制 | K线图表分析系统</p>
+            <p>数据时间范围: 2025-12-15 至 2026-03-04 | 图表类型: 小时线K线图</p>
+        </div>
+    </div>
+</body>
+</html>

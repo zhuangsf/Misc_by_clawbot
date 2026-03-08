@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦞 AI参数查看器 v0.3.1</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            min-height: 90vh;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            padding-left: 120px; /* 给返回按钮留空间 */
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .back-btn {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        header::before {
+            content: '🦞';
+            font-size: 80px;
+            position: absolute;
+            top: 10px;
+            right: 30px;
+            opacity: 0.2;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            padding: 0 20px;
+            overflow-x: auto;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .tab-button {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .tab-button:hover {
+            color: #495057;
+            background: #e9ecef;
+        }
+        
+        .tab-button.active {
+            color: #667eea;
+            background: white;
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+        
+        .memory-section {
+            margin-left: auto;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+            background: rgba(118, 75, 162, 0.1);
+            border-radius: 8px;
+            margin: 10px;
+        }
+        
+        .memory-section label {
+            font-size: 0.9rem;
+            color: #764ba2;
+            font-weight: 600;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .memory-dropdown {
+            padding: 10px 15px;
+            border: 2px solid #d1c4e9;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            font-size: 0.9rem;
+            min-width: 200px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .memory-dropdown:hover {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        }
+        
+        .memory-dropdown:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
+        }
+        
+        .content-area {
+            padding: 30px;
+            min-height: 500px;
+        }
+        
+        .markdown-body {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .loading::after {
+            content: '🦞';
+            display: block;
+            font-size: 40px;
+            margin-top: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .error {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 20px;
+            margin: 20px 0;
+            color: #c53030;
+        }
+        
+        .status-bar {
+            background: #f8f9fa;
+            padding: 10px 30px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-info {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .memory-count {
+            background: #764ba2;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 10px;
+            }
+            
+            header {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .content-area {
+                padding: 15px;
+            }
+            
+            .nav-tabs {
+                padding: 0 10px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+                text-align: left;
+            }
+            
+            .memory-section {
+                margin: 10px 0;
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .memory-dropdown {
+                min-width: auto;
+                flex-grow: 1;
+            }
+        }
+        
+        /* 小龙虾特色样式 */
+        .lobster-emoji {
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* 记忆文件特殊样式 */
+        .memory-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .memory-header h2 {
+            color: white;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        
+        .memory-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .memory-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="back-btn">🏠 返回首页</a>
+            <h1><span class="lobster-emoji">🦞</span> AI参数查看器 v0.3.0</h1>
+            <div class="subtitle">查看小龙虾的配置文件与记忆 · 优化布局 · 支持大量记忆文件</div>
+        </header>
+        
+        <div class="nav-tabs">
+            <div id="configTabs">
+                <!-- 配置文件标签按钮将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="memory-section">
+                <label>
+                    <span>📅 记忆文件</span>
+                    <span id="memoryCount" class="memory-count">0</span>
+                </label>
+                <select id="memoryDropdown" class="memory-dropdown">
+                    <option value="">选择记忆文件...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="content-area">
+            <div id="content" class="loading">
+                正在初始化...
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div id="status">就绪</div>
+            <div id="filePath" class="file-info">当前文件: 无</div>
+        </div>
+    </div>
+
+    <script>
+        // 配置文件列表
+        const configFiles = [
+            { id: 'soul', name: 'SOUL.md', title: '灵魂文件 - 你是谁', path: 'SOUL.md' },
+            { id: 'user', name: 'USER.md', title: '用户文件 - 你帮助谁', path: 'USER.md' },
+            { id: 'agents', name: 'AGENTS.md', title: '代理文件 - 你的工作方式', path: 'AGENTS.md' },
+            { id: 'identity', name: 'IDENTITY.md', title: '身份文件 - 你的基本信息', path: 'IDENTITY.md' },
+            { id: 'tools', name: 'TOOLS.md', title: '工具文件 - 你的工具配置', path: 'TOOLS.md' },
+            { id: 'heartbeat', name: 'HEARTBEAT.md', title: '心跳文件 - 你的检查清单', path: 'HEARTBEAT.md' },
+            { id: 'memory', name: 'MEMORY.md', title: '长期记忆 - 重要的记忆', path: 'MEMORY.md' }
+        ];
+
+        // 状态管理
+        let currentFile = null;
+        let memoryFiles = [];
+        let allFilesList = [];
+        
+        // 获取记忆文件列表
+        async function getMemoryFiles() {
+            try {
+                const response = await fetch('memory/');
+                if (!response.ok) {
+                    throw new Error('无法访问记忆目录');
+                }
+                
+                const text = await response.text();
+                const files = [];
+                
+                // 解析Apache目录列表或Flask目录列表
+                // 尝试匹配不同的目录列表格式
+                const regex = /href="([^"]+\.md)"/g;
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                    const filename = match[1];
+                    // 只匹配日期格式的文件名
+                    if (filename.match(/^\d{4}-\d{2}-\d{2}\.md$/)) {
+                        const date = filename.replace('.md', '');
+                        files.push({
+                            id: `memory-${date}`,
+                            name: filename,
+                            displayName: `${date} 的记忆`,
+                            title: `记忆记录 ${date}`,
+                            path: `memory/${filename}`,
+                            date: date,
+                            isMemory: true
+                        });
+                    }
+                }
+                
+                // 如果没有找到文件，尝试直接访问已知文件
+                if (files.length === 0) {
+                    console.log('目录解析失败，尝试直接访问已知文件...');
+                    const knownDates = ['2026-03-05', '2026-03-04', '2026-03-03'];
+                    for (const date of knownDates) {
+                        const testResponse = await fetch(`memory/${date}.md`);
+                        if (testResponse.ok) {
+                            files.push({
+                                id: `memory-${date}`,
+                                name: `${date}.md`,
+                                displayName: `${date} 的记忆`,
+                                title: `记忆记录 ${date}`,
+                                path: `memory/${date}.md`,
+                                date: date,
+                                isMemory: true
+                            });
+                        }
+                    }
+                }
+                
+                // 按日期倒序排序（最新的在前面）
+                files.sort((a, b) => b.date.localeCompare(a.date));
+                
+                console.log(`找到 ${files.length} 个记忆文件:`, files.map(f => f.name));
+                return files;
+            } catch (error) {
+                console.error('获取记忆文件列表失败:', error);
+                
+                // 回退：使用已知的文件
+                const today = new Date().toISOString().split('T')[0];
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const dayBefore = new Date(Date.now() - 172800000).toISOString().split('T')[0];
+                
+                return [
+                    {
+                        id: `memory-${today}`,
+                        name: `${today}.md`,
+                        displayName: `${today} 的记忆`,
+                        title: `记忆记录 ${today}`,
+                        path: `memory/${today}.md`,
+                        date: today,
+                        isMemory: true
+                    },
+                    {
+                        id: `memory-${yesterday}`,
+                        name: `${yesterday}.md`,
+                        displayName: `${yesterday} 的记忆`,
+                        title: `记忆记录 ${yesterday}`,
+                        path: `memory/${yesterday}.md`,
+                        date: yesterday,
+                        isMemory: true
+                    },
+                    {
+                        id: `memory-${dayBefore}`,
+                        name: `${dayBefore}.md`,
+                        displayName: `${dayBefore} 的记忆`,
+                        title: `记忆记录 ${dayBefore}`,
+                        path: `memory/${dayBefore}.md`,
+                        date: dayBefore,
+                        isMemory: true
+                    }
+                ];
+            }
+        }
+        
+        // 初始化函数
+        async function init() {
+            updateStatus('正在初始化...');
+            
+            // 获取记忆文件
+            memoryFiles = await getMemoryFiles();
+            
+            // 更新记忆文件计数
+            document.getElementById('memoryCount').textContent = memoryFiles.length;
+            
+            // 填充记忆文件下拉框
+            populateMemoryDropdown();
+            
+            // 创建配置文件标签
+            createConfigTabs();
+            
+            // 加载第一个配置文件
+            if (configFiles.length > 0) {
+                await loadFile(configFiles[0]);
+            }
+            
+            updateStatus('就绪');
+        }
+        
+        // 创建配置文件标签
+        function createConfigTabs() {
+            const configTabs = document.getElementById('configTabs');
+            configTabs.innerHTML = '';
+            
+            configFiles.forEach(file => {
+                const button = document.createElement('button');
+                button.className = 'tab-button';
+                button.textContent = file.name;
+                button.dataset.fileId = file.id;
+                button.addEventListener('click', () => loadFile(file));
+                configTabs.appendChild(button);
+            });
+        }
+        
+        // 填充记忆文件下拉框
+        function populateMemoryDropdown() {
+            const dropdown = document.getElementById('memoryDropdown');
+            
+            // 清空现有选项（保留第一个"选择记忆文件..."选项）
+            while (dropdown.options.length > 1) {
+                dropdown.remove(1);
+            }
+            
+            // 添加记忆文件选项
+            memoryFiles.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file.id;
+                option.textContent = file.displayName;
+                dropdown.appendChild(option);
+            });
+            
+            // 添加事件监听
+            dropdown.addEventListener('change', (event) => {
+                const selectedId = event.target.value;
+                if (selectedId) {
+                    const selectedFile = memoryFiles.find(f => f.id === selectedId);
+                    if (selectedFile) {
+                        loadFile(selectedFile);
+                        // 重置下拉框选择
+                        event.target.value = '';
+                    }
+                }
+            });
+        }
+        
+        // 智能路径检测函数
+        async function tryMultiplePaths(file) {
+            const possiblePaths = [
+                file.path,
+                `../${file.name}`,
+                `./${file.name}`,
+                file.name,
+                `../../${file.name}`
+            ];
+            
+            for (const path of possiblePaths) {
+                try {
+                    const response = await fetch(path);
+                    if (response.ok) {
+                        return { success: true, path: path, response: response };
+                    }
+                } catch (e) {
+                    continue;
+                }
+            }
+            return { success: false, pathsTried: possiblePaths };
+        }
+        
+        // 加载文件内容
+        async function loadFile(file) {
+            if (currentFile === file.id) return;
+            
+            // 更新标签状态（如果是配置文件）
+            if (!file.isMemory) {
+                updateTabActive(file.id);
+            }
+            
+            // 显示加载状态
+            document.getElementById('content').innerHTML = '<div class="loading">正在加载 ' + (file.isMemory ? file.displayName : file.name) + '...</div>';
+            updateStatus('正在加载...');
+            
+            try {
+                // 尝试多个可能的路径
+                const result = await tryMultiplePaths(file);
+                
+                if (!result.success) {
+                    throw new Error('无法找到文件');
+                }
+                
+                const markdown = await result.response.text();
+                
+                // 更新状态栏
+                document.getElementById('filePath').textContent = `当前文件: ${result.path}`;
+                
+                // 渲染内容
+                renderContent(file, markdown, result.path);
+                
+                currentFile = file.id;
+                updateStatus('已加载');
+                
+            } catch (error) {
+                showError(file, error);
+            }
+        }
+        
+        // 渲染内容
+        function renderContent(file, markdown, actualPath) {
+            const html = marked.parse(markdown);
+            
+            if (file.isMemory) {
+                // 记忆文件特殊渲染
+                document.getElementById('content').innerHTML = `
+                    <div class="markdown-body">
+                        <div class="memory-header">
+                            <h2>${file.title}</h2>
+                            <div class="memory-meta">
+                                <div class="memory-meta-item">
+                                    <span>📅</span>
+                                    <span>${file.date}</span>
+                                </div>
+                                <div class="memory-meta-item">
+                                    <span>📁</span>
+                                    <span>${actualPath}</span>
+                                </div>
+                                <div class="memory-meta-item">
+                                    <span>🧠</span>
+                                    <span>小龙虾的记忆记录</span>
+                                </div>
+                            </div>
+                        </div>
+                        ${html}
+                    </div>
+                `;
+            } else {
+                // 配置文件渲染
+                document.getElementById('content').innerHTML = `
+                    <div class="markdown-body">
+                        <h2>${file.title}</h2>
+                        <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; color: #1565c0;">
+                            📍 文件路径: ${actualPath}
+                        </div>
+                        <hr>
+                        ${html}
+                    </div>
+                `;
+            }
+        }
+        
+        // 显示错误
+        function showError(file, error) {
+            document.getElementById('content').innerHTML = `
+                <div class="error">
+                    <h3>❌ 加载失败</h3>
+                    <p>${error.message}</p>
+                    <p><small>尝试加载: ${file.isMemory ? file.displayName : file.name}</small></p>
+                    <p><strong>可能的解决方案:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>确保文件存在于服务器可访问的目录</li>
+                        <li>检查HTTP服务器的工作目录</li>
+                        <li>文件可能已被移动或删除</li>
+                    </ul>
+                    <button onclick="loadFile(${JSON.stringify(file)})" style="margin-top: 15px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        重试加载
+                    </button>
+                </div>
+            `;
+            updateStatus('加载失败');
+            document.getElementById('filePath').textContent = '当前文件: 查找失败';
+        }
+        
+        // 更新标签激活状态
+        function updateTabActive(fileId) {
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                if (button.dataset.fileId === fileId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+        
+        // 更新状态栏
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        // 键盘快捷键支持
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey || event.metaKey) {
+                const index = parseInt(event.key) - 1;
+                if (index >= 0 && index < configFiles.length) {
+                    event.preventDefault();
+                    loadFile(configFiles[index]);
+                }
+            }
+        });
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
