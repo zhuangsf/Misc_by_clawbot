@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">童年相册</string>
+    <string name="app_slogan">收藏宝贝成长的每一刻</string>
+    
+    <!-- 登录页 -->
+    <string name="login_title">欢迎回来！</string>
+    <string name="login_subtitle">登录继续探索童年记忆</string>
+    <string name="login_phone_hint">请输入手机号</string>
+    <string name="login_password_hint">请输入密码</string>
+    <string name="login_btn">登 录</string>
+    <string name="login_register_btn">注 册 新 账 号</string>
+    <string name="login_agreement">登录即表示同意 用户协议 和 隐私政策</string>
+    
+    <!-- 注册页 -->
+    <string name="register_title">注册账号！</string>
+    <string name="register_subtitle">和宝贝一起记录成长</string>
+    <string name="register_nickname_hint">请输入昵称</string>
+    <string name="register_phone_hint">请输入手机号</string>
+    <string name="register_password_hint">请设置密码</string>
+    <string name="register_birthday_hint">请选择生日</string>
+    <string name="register_btn">完 成 注 册</string>
+    <string name="register_login_link">已有账号？立即登录</string>
+    
+    <!-- 首页 -->
+    <string name="home_title">童年相册</string>
+    <string name="home_user_name">小公主</string>
+    <string name="home_user_desc">记录成长的美好</string>
+    <string name="home_stat_photos">照片</string>
+    <string name="home_stat_albums">相册</string>
+    <string name="home_stat_years">年份</string>
+    
+    <!-- 分类 -->
+    <string name="category_all">全部</string>
+    <string name="category_birthday">生日</string>
+    <string name="category_travel">出游</string>
+    <string name="category_daily">日常</string>
+    <string name="category_holiday">节日</string>
+    
+    <!-- 底部导航 -->
+    <string name="nav_home">首页</string>
+    <string name="nav_album">相册</string>
+    <string name="nav_upload">上传</string>
+    <string name="nav_profile">我的</string>
+</resources>

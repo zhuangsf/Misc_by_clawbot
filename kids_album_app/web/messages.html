@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息 - 童年相册</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        
+        .header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .header-title { font-size: 18px; font-weight: bold; color: #333; }
+        
+        .msg-list { padding: 0; }
+        .msg-item {
+            display: flex;
+            gap: 12px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+        }
+        .msg-item:hover { background: #fafafa; }
+        .msg-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+        }
+        .msg-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #FF6B6B;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .msg-content { flex: 1; }
+        .msg-top { display: flex; justify-content: space-between; align-items: center; }
+        .msg-name { font-size: 15px; font-weight: bold; color: #333; }
+        .msg-time { font-size: 12px; color: #bbb; }
+        .msg-text { font-size: 14px; color: #999; margin-top: 4px; }
+        .msg-item.unread .msg-name { color: #333; }
+        .msg-item.unread .msg-text { color: #666; font-weight: 500; }
+        
+        .system-msg {
+            background: #fff7e6;
+            padding: 12px 20px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid #ffe4cc;
+        }
+        .system-icon { font-size: 20px; }
+        .system-text { font-size: 13px; color: #666; }
+        
+        .bottom-nav {
+            display: flex;
+            background: white;
+            padding: 8px 5px 20px;
+            border-top: 1px solid #eee;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 430px;
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            cursor: pointer;
+            color: #999;
+        }
+        .nav-item.active { color: #FF6B6B; }
+        .nav-icon { font-size: 22px; }
+        .nav-label { font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">消息</div>
+        </div>
+        
+        <div class="system-msg">
+            <span class="system-icon">🎁</span>
+            <span class="system-text">系统消息：您有3条新粉丝动态</span>
+        </div>
+        
+        <div class="msg-list">
+            <div class="msg-item unread">
+                <div class="msg-avatar">
+                    👩
+                    <span class="msg-badge">2</span>
+                </div>
+                <div class="msg-content">
+                    <div class="msg-top">
+                        <span class="msg-name">妈妈</span>
+                        <span class="msg-time">10:30</span>
+                    </div>
+                    <div class="msg-text">宝贝今天的照片拍得真好看~</div>
+                </div>
+            </div>
+            
+            <div class="msg-item unread">
+                <div class="msg-avatar">
+                    👨
+                    <span class="msg-badge">1</span>
+                </div>
+                <div class="msg-content">
+                    <div class="msg-top">
+                        <span class="msg-name">爸爸</span>
+                        <span class="msg-time">昨天</span>
+                    </div>
+                    <div class="msg-text">周末我们去公园玩吧</div>
+                </div>
+            </div>
+            
+            <div class="msg-item">
+                <div class="msg-avatar">👧</div>
+                <div class="msg-content">
+                    <div class="msg-top">
+                        <span class="msg-name">表姐小米</span>
+                        <span class="msg-time">周三</span>
+                    </div>
+                    <div class="msg-text">姐姐好棒！🎉</div>
+                </div>
+            </div>
+            
+            <div class="msg-item">
+                <div class="msg-avatar">👦</div>
+                <div class="msg-content">
+                    <div class="msg-top">
+                        <span class="msg-name">邻居小胖</span>
+                        <span class="msg-time">周一</span>
+                    </div>
+                    <div class="msg-text">明天一起上学呀</div>
+                </div>
+            </div>
+            
+            <div class="msg-item">
+                <div class="msg-avatar">📷</div>
+                <div class="msg-content">
+                    <div class="msg-top">
+                        <span class="msg-name">相册小助手</span>
+                        <span class="msg-time">12/20</span>
+                    </div>
+                    <div class="msg-text">您有新的评论：太可爱了！</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-item">
+                <span class="nav-icon">➕</span>
+                <span class="nav-label">添加</span>
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-label">发现</span>
+            </div>
+            <div class="nav-item active">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">消息</span>
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">我的</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

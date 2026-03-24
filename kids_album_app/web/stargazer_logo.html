@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星瞳 StarGazer - Logo Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00D9FF;
+            --accent: #8B5CF6;
+            --accent-pink: #EC4899;
+            --bg-dark: #0A0E17;
+            --bg-card: #111827;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 50px;
+        }
+
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+        }
+
+        .logo-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(0, 217, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .logo-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .logo-card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .logo-card .tagline {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .logo-preview {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, rgba(0,217,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .logo-preview svg {
+            width: 160px;
+            height: 160px;
+        }
+
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .color-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-pink));
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⭐ 星瞳 StarGazer</h1>
+        <p class="subtitle">拍照识物App - Logo设计方案</p>
+
+        <div class="logo-grid">
+            <!-- 方案A: 星空之眼 -->
+            <div class="logo-card">
+                <span class="badge">推荐方案</span>
+                <h2>方案A: 星空之眼</h2>
+                <p class="tagline">"瞳孔中藏着星辰大海"</p>
+                
+                <div class="logo-preview">
+                    <svg viewBox="0 0 200 200">
+                        <!-- 外圈眼睛轮廓 -->
+                        <defs>
+                            <linearGradient id="eyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00D9FF"/>
+                                <stop offset="100%" style="stop-color:#8B5CF6"/>
+                            </linearGradient>
+                            <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#FFD700"/>
+                                <stop offset="100%" style="stop-color:#FFA500"/>
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- 眼睛外轮廓 -->
+                        <ellipse cx="100" cy="100" rx="85" ry="60" fill="none" stroke="url(#eyeGradient)" stroke-width="3"/>
+                        
+                        <!-- 虹膜 -->
+                        <circle cx="100" cy="100" r="45" fill="none" stroke="url(#eyeGradient)" stroke-width="2" opacity="0.6"/>
+                        
+                        <!-- 瞳孔 -->
+                        <circle cx="100" cy="100" r="25" fill="#0A0E17" stroke="url(#eyeGradient)" stroke-width="2"/>
+                        
+                        <!-- 瞳孔中的星星 -->
+                        <polygon points="100,80 103,90 113,90 105,96 108,106 100,100 92,106 95,96 87,90 97,90" fill="url(#starGradient)"/>
+                        
+                        <!-- 星光效果 -->
+                        <circle cx="100" cy="100" r="35" fill="none" stroke="#FFD700" stroke-width="1" stroke-dasharray="5,5" opacity="0.5">
+                            <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="10s" repeatCount="indefinite"/>
+                        </circle>
+                        
+                        <!-- 高光点 -->
+                        <circle cx="115" cy="90" r="6" fill="white" opacity="0.8"/>
+                        <circle cx="90" cy="110" r="3" fill="white" opacity="0.4"/>
+                        
+                        <!-- 睫毛/光芒 -->
+                        <line x1="100" y1="35" x2="100" y2="25" stroke="#00D9FF" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="140" y1="50" x2="148" y2="42" stroke="#00D9FF" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="165" y1="100" x2="175" y2="100" stroke="#00D9FF" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                
+                <div class="color-palette">
+                    <div class="color-dot" style="background: #00D9FF"></div>
+                    <div class="color-dot" style="background: #8B5CF6"></div>
+                    <div class="color-dot" style="background: #FFD700"></div>
+                    <div class="color-dot" style="background: #0A0E17"></div>
+                </div>
+                
+                <p class="description">
+                    <strong>创意说明：</strong><br>
+                    眼睛造型象征"视觉"和"识别"，瞳孔中嵌入星星代表"星辰"和"知识库"。整体传达"用科技之眼探索万物奥秘"的品牌理念。渐变色体现科技感。
+                </p>
+            </div>
+
+            <!-- 方案B: 镜头星环 -->
+            <div class="logo-card">
+                <h2>方案B: 镜头星环</h2>
+                <p class="tagline">"旋转的光圈，捕捉星光"</p>
+                
+                <div class="logo-preview">
+                    <svg viewBox="0 0 200 200">
+                        <defs>
+                            <linearGradient id="lensGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00D9FF"/>
+                                <stop offset="100%" style="stop-color:#EC4899"/>
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- 外圈光圈 -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="url(#lensGradient)" stroke-width="3" stroke-dasharray="20,10"/>
+                        
+                        <!-- 旋转动画效果 -->
+                        <circle cx="100" cy="100" r="80" fill="none" stroke="url(#lensGradient)" stroke-width="3" stroke-dasharray="20,10" transform="rotate(120 100 100)" opacity="0.5"/>
+                        
+                        <!-- 镜头外框 -->
+                        <circle cx="100" cy="100" r="65" fill="none" stroke="#00D9FF" stroke-width="4"/>
+                        
+                        <!-- 镜头玻璃效果 -->
+                        <circle cx="100" cy="100" r="55" fill="rgba(0,217,255,0.1)" stroke="#8B5CF6" stroke-width="2"/>
+                        
+                        <!-- 镜头中心-星星 -->
+                        <circle cx="100" cy="100" r="25" fill="#0A0E17"/>
+                        
+                        <!-- 星星 -->
+                        <path d="M100 80 L103 92 L115 92 L105 100 L110 112 L100 104 L90 112 L95 100 L85 92 L97 92 Z" fill="#FFD700">
+                            <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
+                        </path>
+                        
+                        <!-- 四角星光 -->
+                        <circle cx="60" cy="60" r="3" fill="#00D9FF" opacity="0.8"/>
+                        <circle cx="140" cy="60" r="2" fill="#8B5CF6" opacity="0.6"/>
+                        <circle cx="60" cy="140" r="2" fill="#8B5CF6" opacity="0.6"/>
+                        <circle cx="140" cy="140" r="3" fill="#00D9FF" opacity="0.8"/>
+                        
+                        <!-- 镜头反光 -->
+                        <path d="M70 70 Q85 80 75 95" fill="none" stroke="white" stroke-width="2" opacity="0.3"/>
+                    </svg>
+                </div>
+                
+                <div class="color-palette">
+                    <div class="color-dot" style="background: #00D9FF"></div>
+                    <div class="color-dot" style="background: #EC4899"></div>
+                    <div class="color-dot" style="background: #FFD700"></div>
+                    <div class="color-dot" style="background: #0A0E17"></div>
+                </div>
+                
+                <p class="description">
+                    <strong>创意说明：</strong><br>
+                    以相机镜头为原型，光圈化作旋转的星环。中心嵌入星星，象征"拍照"和"识别"的完美结合。适合强调"拍照"功能的App。
+                </p>
+            </div>
+
+            <!-- 方案C: AI星瞳 -->
+            <div class="logo-card">
+                <h2>方案C: AI星瞳</h2>
+                <p class="tagline">"智能之眼，洞察万物"</p>
+                
+                <div class="logo-preview">
+                    <svg viewBox="0 0 200 200">
+                        <defs>
+                            <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00D9FF"/>
+                                <stop offset="50%" style="stop-color:#8B5CF6"/>
+                                <stop offset="100%" style="stop-color:#EC4899"/>
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- 神经网络节点-眼睛轮廓 -->
+                        <circle cx="100" cy="100" r="70" fill="none" stroke="url(#aiGradient)" stroke-width="2" stroke-dasharray="5,5"/>
+                        
+                        <!-- 眼睛造型-节点连线 -->
+                        <g stroke="#00D9FF" stroke-width="1.5" opacity="0.6">
+                            <line x1="100" y1="30" x2="100" y2="70"/>
+                            <line x1="100" y1="130" x2="100" y2="170"/>
+                            <line x1="30" y1="100" x2="70" y2="100"/>
+                            <line x1="130" y1="100" x2="170" y2="100"/>
+                            <line x1="50" y1="50" x2="75" y2="75"/>
+                            <line x1="125" y1="75" x2="150" y2="50"/>
+                            <line x1="50" y1="150" x2="75" y2="125"/>
+                            <line x1="125" y1="125" x2="150" y2="150"/>
+                        </g>
+                        
+                        <!-- 节点 -->
+                        <g fill="url(#aiGradient)">
+                            <circle cx="100" cy="30" r="6"/>
+                            <circle cx="100" cy="100" r="10"/>
+                            <circle cx="100" cy="170" r="6"/>
+                            <circle cx="30" cy="100" r="6"/>
+                            <circle cx="170" cy="100" r="6"/>
+                            <circle cx="50" cy="50" r="5"/>
+                            <circle cx="150" cy="50" r="5"/>
+                            <circle cx="50" cy="150" r="5"/>
+                            <circle cx="150" cy="150" r="5"/>
+                            <circle cx="75" cy="75" r="4"/>
+                            <circle cx="125" cy="75" r="4"/>
+                            <circle cx="75" cy="125" r="4"/>
+                            <circle cx="125" cy="125" r="4"/>
+                        </g>
+                        
+                        <!-- 瞳孔-核心AI芯片 -->
+                        <circle cx="100" cy="100" r="20" fill="#0A0E17" stroke="#00D9FF" stroke-width="2"/>
+                        
+                        <!-- 芯片纹理 -->
+                        <rect x="92" y="90" width="16" height="4" fill="#00D9FF" rx="2"/>
+                        <rect x="92" y="98" width="16" height="4" fill="#8B5CF6" rx="2"/>
+                        <rect x="92" y="106" width="16" height="4" fill="#EC4899" rx="2"/>
+                        
+                        <!-- 星星-知识库 -->
+                        <polygon points="100,100 100,88 108,100 100,112 92,100" fill="#FFD700">
+                            <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+                        </polygon>
+                    </svg>
+                </div>
+                
+                <div class="color-palette">
+                    <div class="color-dot" style="background: #00D9FF"></div>
+                    <div class="color-dot" style="background: #8B5CF6"></div>
+                    <div class="color-dot" style="background: #EC4899"></div>
+                    <div class="color-dot" style="background: #FFD700"></div>
+                </div>
+                
+                <p class="description">
+                    <strong>创意说明：</strong><br>
+                    神经网络节点构成眼睛造型，中央是AI芯片和星星。三色渐变强调"AI智能"属性。适合强调"AI识别"技术实力的产品定位。
+                </p>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; color: var(--text-secondary);">
+            <p> Generated by 小龙虾 🦞 | 2026-03-21</p>
+        </div>
+    </div>
+</body>
+</html>

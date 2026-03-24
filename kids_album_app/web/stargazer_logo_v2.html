@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星瞳 Logo 生成</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #0A0E17;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Noto Sans SC', sans-serif;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #00D9FF, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .canvas-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .logo-item {
+            text-align: center;
+        }
+        
+        canvas {
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.3);
+            margin-bottom: 15px;
+        }
+        
+        .download-btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #00D9FF, #8B5CF6);
+            border: none;
+            border-radius: 25px;
+            color: #0A0E17;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .download-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>⭐ 星瞳 StarGazer - Logo设计</h1>
+    <div class="canvas-container" id="container"></div>
+
+    <script>
+        // 生成圆角矩形的Canvas
+        function createRoundedCanvas(width, height, radius) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            return canvas;
+        }
+
+        // 方案1: 量子星环
+        function drawLogo1(ctx, size) {
+            const cx = size / 2;
+            const cy = size / 2;
+            
+            // 背景渐变
+            const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size/2);
+            bgGrad.addColorStop(0, '#1a1f35');
+            bgGrad.addColorStop(1, '#0A0E17');
+            ctx.fillStyle = bgGrad;
+            roundRect(ctx, 0, 0, size, size, 30);
+            ctx.fill();
+            
+            // 外圈 - 量子轨道
+            ctx.strokeStyle = '#00D9FF';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, cy, size * 0.38, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 轨道缺口和节点
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const x = cx + Math.cos(angle) * size * 0.38;
+                const y = cy + Math.sin(angle) * size * 0.38;
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#00D9FF';
+                ctx.fill();
+                
+                // 节点发光
+                const glow = ctx.createRadialGradient(x, y, 0, x, y, 15);
+                glow.addColorStop(0, 'rgba(0, 217, 255, 0.8)');
+                glow.addColorStop(1, 'transparent');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 内圈 - 旋转椭圆
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(Date.now() / 2000);
+            ctx.strokeStyle = '#8B5CF6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size * 0.25, size * 0.15, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.rotate(Math.PI / 3);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size * 0.25, size * 0.15, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.rotate(Math.PI / 3);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size * 0.25, size * 0.15, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+            
+            // 核心 - 八角星（负空间）
+            ctx.fillStyle = '#0A0E17';
+            drawStar(ctx, cx, cy, 8, size * 0.15, size * 0.06);
+            ctx.fill();
+            
+            // 星光
+            const starGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.08);
+            starGrad.addColorStop(0, '#FFFFFF');
+            starGrad.addColorStop(0.3, '#00D9FF');
+            starGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = starGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, size * 0.08, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 中心亮点
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 方案2: 赛博之眼
+        function drawLogo2(ctx, size) {
+            const cx = size / 2;
+            const cy = size / 2;
+            
+            // 背景
+            const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size/2);
+            bgGrad.addColorStop(0, '#1a1f35');
+            bgGrad.addColorStop(1, '#0A0E17');
+            ctx.fillStyle = bgGrad;
+            roundRect(ctx, 0, 0, size, size, 30);
+            ctx.fill();
+            
+            // 外框 - 科技感多边形
+            ctx.strokeStyle = '#00D9FF';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            const points = 6;
+            for (let i = 0; i < points; i++) {
+                const angle = (i / points) * Math.PI * 2 - Math.PI / 2;
+                const r = size * 0.4;
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            
+            // 内六边形
+            ctx.strokeStyle = '#8B5CF6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < points; i++) {
+                const angle = (i / points) * Math.PI * 2 - Math.PI / 2;
+                const r = size * 0.28;
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            
+            // 瞳孔 - 圆形 + 十字
+            ctx.fillStyle = '#0A0E17';
+            ctx.beginPath();
+            ctx.arc(cx, cy, size * 0.14, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#00D9FF';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx - size * 0.1, cy);
+            ctx.lineTo(cx + size * 0.1, cy);
+            ctx.moveTo(cx, cy - size * 0.1);
+            ctx.lineTo(cx, cy + size * 0.1);
+            ctx.stroke();
+            
+            // 中心点
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼神光
+            ctx.fillStyle = 'rgba(0, 217, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(cx - 15, cy - 15, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 方案3: 暗能量（最终推荐）
+        function drawLogo3(ctx, size) {
+            const cx = size / 2;
+            const cy = size / 2;
+            
+            // 背景 - 深邃宇宙
+            const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size/2);
+            bgGrad.addColorStop(0, '#151b2e');
+            bgGrad.addColorStop(0.5, '#0d1117');
+            bgGrad.addColorStop(1, '#050608');
+            ctx.fillStyle = bgGrad;
+            roundRect(ctx, 0, 0, size, size, 30);
+            ctx.fill();
+            
+            // 外部光环 - 虚线旋转
+            ctx.save();
+            ctx.translate(cx, cy);
+            const time = Date.now() / 1500;
+            
+            // 外圈光环
+            ctx.strokeStyle = '#00D9FF';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([20, 15]);
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.42, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 旋转的点
+            for (let i = 0; i < 3; i++) {
+                const angle = time + (i * Math.PI * 2 / 3);
+                const x = Math.cos(angle) * size * 0.42;
+                const y = Math.sin(angle) * size * 0.42;
+                
+                // 光点
+                const dotGrad = ctx.createRadialGradient(x, y, 0, x, y, 20);
+                dotGrad.addColorStop(0, 'rgba(0, 217, 255, 1)');
+                dotGrad.addColorStop(0.5, 'rgba(0, 217, 255, 0.3)');
+                dotGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = dotGrad;
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#00D9FF';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+            
+            // 内圈 - 科技环
+            ctx.strokeStyle = 'rgba(139, 92, 246, 0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, size * 0.3, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 中心的眼睛造型 - 用渐变创造深邃感
+            const eyeGrad = ctx.createRadialGradient(cx, cy - 10, 0, cx, cy, size * 0.2);
+            eyeGrad.addColorStop(0, '#0d1117');
+            eyeGrad.addColorStop(0.7, '#0d1117');
+            eyeGrad.addColorStop(1, '#00D9FF');
+            ctx.fillStyle = eyeGrad;
+            
+            // 杏仁形眼睛
+            ctx.beginPath();
+            ctx.moveTo(cx - size * 0.15, cy);
+            ctx.quadraticCurveTo(cx - size * 0.15, cy - size * 0.12, cx, cy - size * 0.15);
+            ctx.quadraticCurveTo(cx + size * 0.15, cy - size * 0.12, cx + size * 0.15, cy);
+            ctx.quadraticCurveTo(cx + size * 0.15, cy + size * 0.12, cx, cy + size * 0.08);
+            ctx.quadraticCurveTo(cx - size * 0.15, cy + size * 0.12, cx - size * 0.15, cy);
+            ctx.fill();
+            ctx.strokeStyle = '#00D9FF';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            // 瞳孔中的星星
+            ctx.fillStyle = '#fff';
+            drawStar(ctx, cx, cy, 4, 18, 8);
+            ctx.fill();
+            
+            // 星星微光
+            const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 25);
+            glow.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            glow.addColorStop(0.3, 'rgba(0, 217, 255, 0.4)');
+            glow.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        function drawStar(ctx, cx, cy, points, outerR, innerR) {
+            ctx.beginPath();
+            for (let i = 0; i < points * 2; i++) {
+                const r = i % 2 === 0 ? outerR : innerR;
+                const angle = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+        }
+
+        // 生成所有Logo
+        const logos = [
+            { name: 'quantum_star', draw: drawLogo1, title: '方案1: 量子星环' },
+            { name: 'cyber_eye', draw: drawLogo2, title: '方案2: 赛博之眼' },
+            { name: 'dark_energy', draw: drawLogo3, title: '方案3: 暗能量 ⭐推荐' }
+        ];
+
+        const container = document.getElementById('container');
+
+        logos.forEach(logo => {
+            const canvas = createRoundedCanvas(512, 512, 30);
+            const ctx = canvas.getContext('2d');
+            logo.draw(ctx, 512);
+            
+            const item = document.createElement('div');
+            item.className = 'logo-item';
+            item.innerHTML = `
+                <h3 style="margin-bottom: 10px; color: #8B5CF6;">${logo.title}</h3>
+                <canvas id="${logo.name}" width="512" height="512"></canvas>
+                <button class="download-btn" onclick="download('${logo.name}')">下载 PNG</button>
+            `;
+            container.appendChild(item);
+            
+            // 绘制
+            const c = document.getElementById(logo.name);
+            const cx = c.getContext('2d');
+            logo.draw(cx, 512);
+        });
+
+        function download(name) {
+            const canvas = document.getElementById(name);
+            const link = document.createElement('a');
+            link.download = `stargazer_logo_${name}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // 动画更新
+        function animate() {
+            logos.forEach(logo => {
+                const canvas = document.getElementById(logo.name);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    logo.draw(ctx, 512);
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

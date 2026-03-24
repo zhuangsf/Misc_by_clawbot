@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色调 - 活力彩色 -->
+    <color name="primary_red">#FF6B6B</color>
+    <color name="primary_orange">#FFB347</color>
+    <color name="primary_yellow">#FFE066</color>
+    <color name="primary_green">#7ED957</color>
+    <color name="primary_blue">#5DADEC</color>
+    <color name="primary_purple">#C9A0DC</color>
+    <color name="primary_pink">#FF9ED2</color>
+    
+    <!-- 功能色 -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="text_dark">#2D3436</color>
+    <color name="text_gray">#636E72</color>
+    <color name="bg_light">#FFFEF5</color>
+    
+    <!-- 渐变 colors -->
+    <color name="gradient_start">#FF6B6B</color>
+    <color name="gradient_mid">#FFE066</color>
+    <color name="gradient_end">#5DADEC</color>
+    
+    <!-- 分类颜色 -->
+    <color name="category_all">#FF6B6B</color>
+    <color name="category_birthday">#FF9ED2</color>
+    <color name="category_travel">#5DADEC</color>
+    <color name="category_daily">#7ED957</color>
+    <color name="category_holiday">#FFB347</color>
+</resources>

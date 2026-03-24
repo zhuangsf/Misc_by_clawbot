@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>相册 - NeoAlbum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00D9FF;
+            --primary-dark: #0099CC;
+            --primary-light: #66E5FF;
+            --accent: #8B5CF6;
+            --accent-pink: #EC4899;
+            --bg-dark: #0A0E17;
+            --bg-card: #111827;
+            --bg-elevated: #1F2937;
+            --gradient-primary: linear-gradient(135deg, #00D9FF 0%, #8B5CF6 100%);
+            --gradient-glow: linear-gradient(135deg, rgba(0,217,255,0.2) 0%, rgba(139,92,246,0.2) 100%);
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --border: rgba(0, 217, 255, 0.15);
+            --glow: 0 0 20px rgba(0, 217, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* 背景 */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 217, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 217, 255, 0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 0;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 10% 10%, rgba(0, 217, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(ellipse at 90% 90%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            z-index: 0;
+        }
+
+        /* 顶部导航 */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 23, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+        }
+
+        .top-bar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--bg-dark);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 搜索栏 */
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-bar input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* 顶部操作按钮 */
+        .top-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-elevated);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .icon-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-pink);
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            padding: 15px 20px;
+            background: rgba(17, 24, 39, 0.6);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-bar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .filter-bar-inner::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-chip {
+            padding: 8px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-chip.active {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: var(--bg-dark);
+            font-weight: 600;
+        }
+
+        /* 相册网格 */
+        .album-grid {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 900px) {
+            .album-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .album-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 15px;
+            }
+        }
+
+        /* 照片卡片 */
+        .photo-card {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 217, 255, 0.2);
+            border-color: var(--primary);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .photo-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 40px 15px 15px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .photo-card:hover .photo-overlay {
+            opacity: 1;
+        }
+
+        .photo-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .photo-meta i {
+            font-size: 10px;
+        }
+
+        /* 照片角标 */
+        .photo-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            font-size: 11px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 多选状态 */
+        .photo-card.selecting {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.3);
+        }
+
+        .select-checkbox {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .photo-card:hover .select-checkbox,
+        .photo-card.selecting .select-checkbox {
+            opacity: 1;
+        }
+
+        .photo-card.selecting .select-checkbox {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .select-checkbox i {
+            color: var(--bg-dark);
+            font-size: 12px;
+            display: none;
+        }
+
+        .photo-card.selecting .select-checkbox i {
+            display: block;
+        }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 10px 0;
+            z-index: 100;
+        }
+
+        .bottom-nav-inner {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item.active i {
+            filter: drop-shadow(0 0 8px var(--primary));
+        }
+
+        /* 浮动操作按钮 */
+        .fab {
+            position: fixed;
+            bottom: 100px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: 50%;
+            color: var(--bg-dark);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+            transition: all 0.3s ease;
+            z-index: 99;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 15px 40px rgba(0, 217, 255, 0.5);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* 骨架屏动画 */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elevated) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-gradient"></div>
+
+    <!-- 顶部导航 -->
+    <header class="top-bar">
+        <div class="top-bar-inner">
+            <a href="home.html" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <span class="logo-text">NeoAlbum</span>
+            </a>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索照片...">
+            </div>
+            
+            <div class="top-actions">
+                <button class="icon-btn" title="筛选">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+                <button class="icon-btn" title="消息">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">3</span>
+                </button>
+                <button class="icon-btn" title="个人资料" onclick="window.location.href='profile.html'">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+        <div class="filter-bar-inner">
+            <div class="filter-chip active">全部</div>
+            <div class="filter-chip">最近</div>
+            <div class="filter-chip">收藏</div>
+            <div class="filter-chip">风景</div>
+            <div class="filter-chip">人物</div>
+            <div class="filter-chip">生活</div>
+            <div class="filter-chip">旅行</div>
+            <div class="filter-chip">美食</div>
+        </div>
+    </div>
+
+    <!-- 相册网格 -->
+    <main class="album-grid" id="albumGrid">
+        <!-- 照片卡片 -->
+    </main>
+
+    <!-- 浮动按钮 -->
+    <button class="fab" title="添加照片">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            <a href="home.html" class="nav-item active">
+                <i class="fas fa-images"></i>
+                <span>相册</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-compass"></i>
+                <span>发现</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-heart"></i>
+                <span>收藏</span>
+            </a>
+            <a href="profile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // 模拟照片数据
+        const photos = [
+            { id: 1, title: '城市夜景', date: '2026-03-20', location: '上海', img: 'https://picsum.photos/seed/city1/400/400', type: '风景' },
+            { id: 2, title: '海边日落', date: '2026-03-19', location: '三亚', img: 'https://picsum.photos/seed/beach1/400/400', type: '风景' },
+            { id: 3, title: '咖啡时光', date: '2026-03-18', location: '北京', img: 'https://picsum.photos/seed/coffee1/400/400', type: '生活' },
+            { id: 4, title: 'Mountain View', date: '2026-03-17', location: '西藏', img: 'https://picsum.photos/seed/mountain1/400/400', type: '旅行' },
+            { id: 5, title: '美食记录', date: '2026-03-16', location: '成都', img: 'https://picsum.photos/seed/food1/400/400', type: '美食' },
+            { id: 6, title: '朋友聚会', date: '2026-03-15', location: '杭州', img: 'https://picsum.photos/seed/party1/400/400', type: '人物' },
+            { id: 7, title: '樱花盛开', date: '2026-03-14', location: '武汉', img: 'https://picsum.photos/seed/sakura1/400/400', type: '风景' },
+            { id: 8, title: '星空露营', date: '2026-03-13', location: '青海', img: 'https://picsum.photos/seed/stars1/400/400', type: '旅行' },
+            { id: 9, title: '早餐日常', date: '2026-03-12', location: '家', img: 'https://picsum.photos/seed/breakfast1/400/400', type: '生活' },
+            { id: 10, title: '建筑设计', date: '2026-03-11', location: '深圳', img: 'https://picsum.photos/seed/arch1/400/400', type: '风景' },
+            { id: 11, title: '宠物时光', date: '2026-03-10', location: '家', img: 'https://picsum.photos/seed/pet1/400/400', type: '生活' },
+            { id: 12, title: '工作瞬间', date: '2026-03-09', location: '办公室', img: 'https://picsum.photos/seed/work1/400/400', type: '人物' },
+        ];
+
+        // 渲染照片网格
+        const albumGrid = document.getElementById('albumGrid');
+        
+        function renderPhotos() {
+            albumGrid.innerHTML = photos.map(photo => `
+                <div class="photo-card" onclick="viewPhoto(${photo.id})">
+                    <img src="${photo.img}" alt="${photo.title}" loading="lazy">
+                    
+                    <div class="select-checkbox">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    
+                    ${photo.type === '收藏' ? '<div class="photo-badge"><i class="fas fa-star"></i> 精选</div>' : ''}
+                    
+                    <div class="photo-overlay">
+                        <div class="photo-title">${photo.title}</div>
+                        <div class="photo-meta">
+                            <span><i class="fas fa-calendar-alt"></i> ${photo.date}</span>
+                            <span><i class="fas fa-map-marker-alt"></i> ${photo.location}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 查看照片详情
+        function viewPhoto(id) {
+            const photo = photos.find(p => p.id === id);
+            if (photo) {
+                window.location.href = `photo.html?id=${id}`;
+            }
+        }
+
+        // 筛选功能
+        const filterChips = document.querySelectorAll('.filter-chip');
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                filterChips.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                // 实际项目中这里会重新请求数据
+            });
+        });
+
+        // 初始化
+        renderPhotos();
+    </script>
+</body>
+</html>

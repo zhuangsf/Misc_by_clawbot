@@ -1,7 +1,7 @@
 # 项目关系文档
 
 > 本文档记录所有项目/脚本的关系，更新代码时请同步更新本文档
-> 最后更新: 2026-03-08
+> 最后更新: 2026-03-24
 
 ---
 
@@ -38,6 +38,56 @@
 │
 ├── 🔧 策略工具
 │   └── backtest_engine.py         # 追涨杀跌策略回测系统
+│
+├── 👶 kids_album_app              # 儿童相册应用
+│   ├── android/                   # Android原生(Kotlin)
+│   │   ├── app/src/main/java/com/kidsalbum/
+│   │   │   ├── adapter/           # 适配器
+│   │   │   ├── model/             # 数据模型
+│   │   │   ├── screens/          # 页面
+│   │   │   └── ui/                # UI组件
+│   │   └── app/src/main/res/     # 资源文件
+│   ├── flutter/                   # Flutter跨平台
+│   │   └── lib/
+│   │       ├── screens/           # 页面
+│   │       ├── theme/             # 主题
+│   │       └── widgets/           # 组件
+│   └── web/                       # Web版本
+│       ├── index.html             # 入口页
+│       ├── home.html              # 首页
+│       ├── login.html             # 登录页
+│       ├── register.html          # 注册页
+│       ├── photo.html             # 照片页
+│       ├── profile.html           # 个人页
+│       └── DESIGN.md              # 设计文档
+│
+│   **功能**: 儿童相册展示、分类(生日/日常/旅行/节日)、照片浏览
+│   **技术栈**: Kotlin + Flutter + HTML/CSS/JS
+│
+├── 🎭 modes                       # 模式系统
+│   ├── README.md                  # 模式索引
+│   ├── crayfish.md                # 🦞 小龙虾模式(默认)
+│   ├── musk.md                    # 🚀 马斯克模式
+│   ├── musk-toolkit.md            # 🚀 马斯克思维工具箱
+│   └── wenshan.md                 # 🧘 文案禅师模式
+│
+│   **功能**: AI助手人格切换
+│   **触发**: 用户消息中的关键词自动切换模式
+│   **集成**: SOUL.md 中的核心组件
+│
+├── ✍️ story_creator              # 故事创作引擎
+│   ├── backend/                   # 后端(FastAPI, 端口8000)
+│   │   ├── core/                  # 核心逻辑
+│   │   └── main.py               # 主入口
+│   ├── frontend/                  # 前端(Vue3 + Vue Router)
+│   │   └── index.html             # 主页面
+│   ├── docs/
+│   │   └── PRD.md                # 产品需求文档
+│   └── backend.log               # 后端日志
+│
+│   **功能**: AI小说创作、角色/框架编辑、LLM内容同步
+│   **状态**: 降级运行(简单替换)
+│   **访问**: /story_creator
 │
 ├── 📋 文档
 │   ├── README.md                  # 根目录主文档
@@ -117,6 +167,19 @@
 | 8080 | Flask | `/douyin_emo` | 抖音EMO系统介绍页 | ✅ 运行中 |
 | 8080 | Flask | `/douyin_emo/videos` | 抖音EMO视频列表 | ✅ 运行中 |
 | 8080 | Flask | `/emo_hooks_preview.html` | 抖音EMO文案库预览 | ✅ 运行中 |
+| 8080 | Flask | `/story_creator` | 故事创作引擎 | ✅ 运行中 |
+| 8000 | FastAPI | `/api/*` | 故事创作后端API | ✅ 运行中 |
+
+---
+
+### 新增模块端口说明
+
+| 模块 | 端口 | 说明 |
+|------|------|------|
+| story_creator | 8000 | FastAPI后端，提供LLM内容生成API |
+| story_creator | 8080/story_creator | Vue3前端，通过Flask代理访问 |
+| kids_album_app | - | 本地开发，运行在独立目录 |
+| modes | - | 无独立服务，集成在OpenClaw主进程 |
 
 ---
 
@@ -189,6 +252,36 @@ multifunction_app.py
 | `douyin_emo/output/audio/*.mp3` | 生成音频 | video_assembler.py | 无 |
 | `douyin_emo/tracking_table.md` | 文件追踪表 | 手动 | 无 |
 | `douyin_emo/抖音共鸣系统视频标准SOP.md` | 操作规范 | 文档 | 无 |
+
+### kids_album_app 儿童相册
+
+| 文件 | 用途 | 被引用位置 | 依赖 |
+|------|------|-----------|------|
+| `kids_album_app/android/` | Android原生代码 | Android Studio | Gradle, Kotlin |
+| `kids_album_app/flutter/` | Flutter跨平台代码 | Flutter | Dart SDK |
+| `kids_album_app/web/` | Web版本 | 浏览器 | 无 |
+| `kids_album_app/web/home.html` | 首页 | 浏览器 | 无 |
+| `kids_album_app/web/DESIGN.md` | 设计文档 | 文档 | 无 |
+
+### modes 模式系统
+
+| 文件 | 用途 | 被引用位置 | 依赖 |
+|------|------|-----------|------|
+| `modes/crayfish.md` | 小龙虾模式配置 | SOUL.md | 无 |
+| `modes/musk.md` | 马斯克模式配置 | SOUL.md | 无 |
+| `modes/musk-toolkit.md` | 马斯克思维工具箱 | SOUL.md | 无 |
+| `modes/wenshan.md` | 文案禅师模式配置 | SOUL.md | 无 |
+| `modes/README.md` | 模式索引 | 文档 | 无 |
+
+### story_creator 故事创作引擎
+
+| 文件 | 用途 | 被引用位置 | 依赖 |
+|------|------|-----------|------|
+| `story_creator/backend/main.py` | FastAPI后端主入口 | 端口8000 | FastAPI, uvicorn |
+| `story_creator/backend/core/` | 核心逻辑 | main.py | 无 |
+| `story_creator/frontend/index.html` | Vue3前端 | 浏览器 | Vue3, Vue Router |
+| `story_creator/docs/PRD.md` | 产品需求文档 | 文档 | 无 |
+| `story_creator/backend.log` | 后端日志 | 自动生成 | 无 |
 
 ### 日志文件
 
@@ -265,9 +358,9 @@ python3 generate.py --count 3 --hook-type harsh_truths
 #### 视频生成参数
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| MarginL/MarginR | 50 | 左右边距 |
+| MarginL/MarginR | 80 | 左右边距 |
 | MarginV | 800 | 垂直位置 |
-| 自动换行 | 18字/行 | 超长句子自动拆分 |
+| 自动换行 | 15字/行 | 超长句子自动拆分 |
 
 #### 文档同步规则
 | 代码变更 | 必须同步的文档 |
@@ -293,8 +386,11 @@ markdownlint /root/.openclaw/workspace/docs/PROJECTS.md
 
 | 日期 | 变更 | 操作人 |
 |------|------|--------|
+| 2026-03-24 | 新增 kids_album_app 儿童相册应用模块 | 小龙虾 |
+| 2026-03-24 | 新增 modes 模式系统（小龙虾/马斯克/文案禅师） | 小龙虾 |
+| 2026-03-24 | 新增 story_creator 故事创作引擎（v1.4.0） | 小龙虾 |
 | 2026-03-08 | 抖音EMO系统集成到主入口 | 小龙虾 |
-| 2026-03-08 | 字幕参数调整 MarginL/R=50, MarginV=800 | 小龙虾 |
+| 2026-03-08 | 字幕参数调整 MarginL/R=50, MarginV=800 | 小小龙 |
 | 2026-03-08 | 添加自动换行规则（18字/行） | 小龙虾 |
 | 2026-03-07 | 创建文档体系，添加logs目录 | 小龙虾 |
 | 2026-03-06 | 添加放量记录+回测系统 | 小龙虾 |

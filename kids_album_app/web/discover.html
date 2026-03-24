@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发现 - 童年相册</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        
+        .header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .header-title { font-size: 18px; font-weight: bold; color: #333; }
+        
+        .section { padding: 15px; }
+        .section-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 12px; }
+        
+        .friend-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .friend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .friend-name { font-size: 12px; color: #666; }
+        
+        .discovery-list { display: flex; flex-direction: column; gap: 10px; }
+        .discovery-card {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+        }
+        .discovery-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+        .discovery-info { flex: 1; }
+        .discovery-title { font-size: 14px; font-weight: bold; color: #333; }
+        .discovery-desc { font-size: 12px; color: #999; margin-top: 4px; }
+        .discovery-meta { font-size: 11px; color: #bbb; margin-top: 8px; }
+        
+        .bottom-nav {
+            display: flex;
+            background: white;
+            padding: 8px 5px 20px;
+            border-top: 1px solid #eee;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 430px;
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            cursor: pointer;
+            color: #999;
+        }
+        .nav-item.active { color: #FF6B6B; }
+        .nav-icon { font-size: 22px; }
+        .nav-label { font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">发现</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">好友动态</div>
+            <div class="friend-grid">
+                <div class="friend-item">
+                    <div class="friend-avatar">👧</div>
+                    <div class="friend-name">小米</div>
+                </div>
+                <div class="friend-item">
+                    <div class="friend-avatar">👦</div>
+                    <div class="friend-name">豆豆</div>
+                </div>
+                <div class="friend-item">
+                    <div class="friend-avatar">🧒</div>
+                    <div class="friend-name">乐乐</div>
+                </div>
+                <div class="friend-item">
+                    <div class="friend-avatar">👶</div>
+                    <div class="friend-name">仔仔</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">推荐内容</div>
+            <div class="discovery-list">
+                <div class="discovery-card">
+                    <div class="discovery-img">🎂</div>
+                    <div class="discovery-info">
+                        <div class="discovery-title">生日派对照片</div>
+                        <div class="discovery-desc">小公主的3岁生日派对</div>
+                        <div class="discovery-meta">2024年12月 · 32张照片</div>
+                    </div>
+                </div>
+                <div class="discovery-card">
+                    <div class="discovery-img">🏖️</div>
+                    <div class="discovery-info">
+                        <div class="discovery-title">三亚旅行</div>
+                        <div class="discovery-desc">全家海边度假</div>
+                        <div class="discovery-meta">2024年8月 · 56张照片</div>
+                    </div>
+                </div>
+                <div class="discovery-card">
+                    <div class="discovery-img">🎄</div>
+                    <div class="discovery-info">
+                        <div class="discovery-title">圣诞快乐</div>
+                        <div class="discovery-desc">圣诞节的温馨时刻</div>
+                        <div class="discovery-meta">2024年12月 · 24张照片</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-item">
+                <span class="nav-icon">➕</span>
+                <span class="nav-label">添加</span>
+            </div>
+            <div class="nav-item active">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-label">发现</span>
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">消息</span>
+            </div>
+            <div class="nav-item">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">我的</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

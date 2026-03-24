@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 基础主题 -->
+    <style name="Theme.KidsAlbum" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary_red</item>
+        <item name="colorPrimaryVariant">@color/primary_orange</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/primary_pink</item>
+        <item name="colorSecondaryVariant">@color/primary_purple</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:statusBarColor">@color/primary_red</item>
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+    
+    <!-- 启动页主题 - 全屏透明 -->
+    <style name="Theme.KidsAlbum.Splash" parent="Theme.KidsAlbum">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+    
+    <!-- 按钮风格 -->
+    <style name="Widget.KidsAlbum.Button" parent="Widget.Material3.Button">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">25dp</item>
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+    </style>
+    
+    <!-- 输入框风格 -->
+    <style name="Widget.KidsAlbum.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">20dp</item>
+        <item name="boxCornerRadiusTopEnd">20dp</item>
+        <item name="boxCornerRadiusBottomStart">20dp</item>
+        <item name="boxCornerRadiusBottomEnd">20dp</item>
+        <item name="boxStrokeColor">@color/primary_yellow</item>
+        <item name="boxStrokeWidth">3dp</item>
+    </style>
+    
+    <!-- 卡片风格 -->
+    <style name="Widget.KidsAlbum.CardView" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">4dp</item>
+    </style>
+    
+    <!-- 分类标签 -->
+    <style name="Widget.KidsAlbum.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipCornerRadius">20dp</item>
+        <item name="chipMinHeight">40dp</item>
+    </style>
+</resources>
