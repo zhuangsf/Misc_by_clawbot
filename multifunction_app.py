@@ -10,7 +10,7 @@ import json
 import time
 import re
 from datetime import datetime, timedelta
-from flask import Flask, jsonify, send_from_directory, send_file, render_template_string, request
+from flask import Flask, jsonify, send_from_directory, send_file, render_template_string, request, make_response
 from flask_cors import CORS
 
 # 添加到系统路径，便于导入
@@ -714,6 +714,82 @@ def index():
                     </ul>
                     <div class="status-badge">已部署</div>
                 </a>
+                
+                <a href="/story_creator" class="app-card">
+                    <h2>
+                        <span class="emoji">📝</span>
+                        故事创作引擎
+                    </h2>
+                    <p class="description">
+                        对话驱动的互动故事创作引擎，通过AI引导将你的想象转化为完整小说、游戏策划案、剧本或自传。
+                    </p>
+                    <ul class="features">
+                        <li>AI构思引导</li>
+                        <li>自动生成世界观和角色</li>
+                        <li>可视化关系图谱</li>
+                        <li>章节规划与创作</li>
+                        <li>多形态导出</li>
+                        <li>沉浸式创作体验</li>
+                    </ul>
+                    <div class="status-badge">已部署</div>
+                </a>
+                
+                <a href="/vision_engine" class="app-card">
+                    <h2>
+                        <span class="emoji">🎨</span>
+                        视觉引擎
+                    </h2>
+                    <p class="description">
+                        专业的 UI/UX 设计智能助手，支持多平台界面设计，具备设计评估、优化建议等专业能力。
+                    </p>
+                    <ul class="features">
+                        <li>设计智能分析</li>
+                        <li>多平台适配</li>
+                        <li>用户体验优化</li>
+                        <li>设计规范检查</li>
+                        <li>响应式布局验证</li>
+                        <li>专业建议输出</li>
+                    </ul>
+                    <div class="status-badge">已部署</div>
+                </a>
+                
+                <a href="/stt" class="app-card">
+                    <h2>
+                        <span class="emoji">🎙️</span>
+                        STT 语音转文字
+                    </h2>
+                    <p class="description">
+                        基于讯飞录音文件转写大模型，支持双人对话音频的说话人分离，自动区分不同说话人。
+                    </p>
+                    <ul class="features">
+                        <li>拖拽上传音频文件</li>
+                        <li>自动说话人分离</li>
+                        <li>支持多种音频格式</li>
+                        <li>实时转写进度显示</li>
+                        <li>一键复制/下载结果</li>
+                        <li>准确率 98%</li>
+                    </ul>
+                    <div class="status-badge">🆕 新增</div>
+                </a>
+                
+                <a href="/github_trending" class="app-card">
+                    <h2>
+                        <span class="emoji">📈</span>
+                        GitHub 热门仓库
+                    </h2>
+                    <p class="description">
+                        每日自动抓取 GitHub Star 增长最快的开源项目，按今日增长量排序，第一时间发现热门项目。
+                    </p>
+                    <ul class="features">
+                        <li>每日自动更新</li>
+                        <li>按增长量排序</li>
+                        <li>显示今日增长数</li>
+                        <li>项目描述和语言</li>
+                        <li>飞书每日推送</li>
+                        <li>一键跳转到GitHub</li>
+                    </ul>
+                    <div class="status-badge">运行中</div>
+                </a>
             </div>
             
             <div class="footer">
@@ -1352,6 +1428,719 @@ def ai_params_viewer_static(filename):
     """AI参数查看器静态文件"""
     return send_from_directory(CONFIG["STATIC_PATHS"]["ai_params_viewer"], filename)
 
+# ==================== 故事创作引擎 ====================
+@app.route('/story_creator')
+@app.route('/story_creator/')
+def story_creator_index():
+    """故事创作引擎首页"""
+    story_dir = "/root/.openclaw/workspace/story_creator/frontend"
+    return send_from_directory(story_dir, "index.html")
+
+# Vue Router SPA fallback - 必须放在 /story_api 之前
+@app.route('/story_creator/<path:subpath>')
+def story_creator_spa_fallback(subpath):
+    """Vue Router SPA fallback - 返回 index.html 让前端处理路由"""
+    # 排除 API 路径
+    if subpath.startswith('api/'):
+        return "Not Found", 404
+    story_dir = "/root/.openclaw/workspace/story_creator/frontend"
+    return send_from_directory(story_dir, "index.html")
+
+@app.route('/story_creator/<path:filename>')
+def story_creator_static(filename):
+    """故事创作引擎静态文件"""
+    story_dir = "/root/.openclaw/workspace/story_creator/frontend"
+    return send_from_directory(story_dir, filename)
+
+# 故事创作引擎API代理（解决跨域问题）
+@app.route('/story_api/<path:subpath>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+def story_api_proxy(subpath):
+    """代理story_creator后端API请求"""
+    import requests
+    from flask import request
+    
+    # 转发到后端服务
+    url = f'http://127.0.0.1:8000/api/{subpath}'
+    
+    try:
+        # 准备请求头（移除一些可能导致问题的headers）
+        headers = {k: v for k, v in request.headers if k.lower() not in ['host', 'content-length']}
+        headers['Content-Type'] = 'application/json'
+        
+        if request.method == 'GET':
+            resp = requests.get(url, params=request.args, headers=headers, timeout=30)
+        elif request.method in ['POST', 'PUT', 'PATCH']:
+            json_data = request.get_json(silent=True) or {}
+            resp = requests.request(method=request.method, url=url, json=json_data, headers=headers, timeout=30)
+        elif request.method == 'DELETE':
+            resp = requests.delete(url, headers=headers, timeout=30)
+        else:
+            return "Method not allowed", 405
+        
+        return resp.content, resp.status_code, {'Content-Type': resp.headers.get('Content-Type', 'application/json')}
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ==================== 视觉引擎 ====================
+VISION_ENGINE_DIR = "/root/.openclaw/workspace/kids_album_app/web"
+
+@app.route('/vision_engine')
+@app.route('/vision_engine/')
+def vision_engine_index():
+    """视觉引擎 - AI设计生成 + 设计系统选择"""
+    
+    # 导入设计系统解析器
+    import sys
+    sys.path.insert(0, '/root/.openclaw/workspace/vision_engine')
+    from design_system_parser import get_available_brands, BRAND_CATEGORIES
+    
+    # 获取所有设计系统品牌
+    brands = get_available_brands()
+    
+    # 按分类组织品牌
+    brands_by_category = {}
+    for brand in brands:
+        cat = brand.get("category", "其他")
+        if cat not in brands_by_category:
+            brands_by_category[cat] = []
+        brands_by_category[cat].append(brand)
+    
+    html = '''
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>🎨 视觉引擎 v2.0 | 设计系统驱动</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+                min-height: 100vh; 
+                color: #fff; 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+            .header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
+            .header h1 { font-size: 3rem; margin-bottom: 10px; background: linear-gradient(135deg, #00d4ff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .header p { color: #94a3b8; font-size: 1.1rem; }
+            
+            /* AI 生成区域 */
+            .ai-generator { 
+                background: rgba(30, 41, 59, 0.8); 
+                border-radius: 24px; 
+                padding: 40px; 
+                margin-bottom: 50px;
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            }
+            .ai-generator h2 { margin-bottom: 20px; color: #00d4ff; font-size: 1.5rem; }
+            .input-group { display: flex; gap: 15px; margin-bottom: 20px; }
+            .ai-generator textarea { 
+                flex: 1;
+                padding: 20px; 
+                border-radius: 16px; 
+                border: 2px solid rgba(255,255,255,0.1);
+                background: rgba(15, 23, 42, 0.6);
+                color: #fff;
+                font-size: 1rem;
+                resize: vertical;
+                min-height: 120px;
+                font-family: inherit;
+            }
+            .ai-generator textarea:focus { outline: none; border-color: #00d4ff; }
+            .ai-generator textarea::placeholder { color: #64748b; }
+            
+            .selected-brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px 20px;
+                background: rgba(0, 212, 255, 0.1);
+                border: 1px solid rgba(0, 212, 255, 0.3);
+                border-radius: 12px;
+                margin-bottom: 20px;
+                font-size: 0.95rem;
+                color: #00d4ff;
+            }
+            .selected-brand .color-dot {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 2px solid rgba(255,255,255,0.3);
+            }
+            .selected-brand .clear-btn {
+                margin-left: auto;
+                cursor: pointer;
+                opacity: 0.7;
+            }
+            .selected-brand .clear-btn:hover { opacity: 1; }
+            
+            .btn-generate {
+                padding: 16px 48px;
+                font-size: 1.1rem;
+                background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+                border: none;
+                border-radius: 16px;
+                color: white;
+                cursor: pointer;
+                transition: all 0.3s;
+                font-weight: 600;
+            }
+            .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3); }
+            .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+            
+            /* 生成结果 */
+            .generate-result {
+                margin-top: 30px;
+                padding: 25px;
+                background: rgba(15, 23, 42, 0.6);
+                border-radius: 16px;
+                display: none;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            .generate-result.show { display: block; }
+            .generate-result h4 { margin-bottom: 15px; color: #10b981; }
+            .generate-result pre {
+                background: rgba(0,0,0,0.5);
+                padding: 20px;
+                border-radius: 12px;
+                overflow-x: auto;
+                max-height: 400px;
+                font-size: 0.85rem;
+                color: #00ff88;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            .generate-result .preview-btn {
+                margin-top: 15px;
+                padding: 12px 30px;
+                background: #10b981;
+                border: none;
+                border-radius: 12px;
+                color: white;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s;
+            }
+            .generate-result .preview-btn:hover { background: #059669; }
+            
+            /* 品牌网格 */
+            .section-title {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin: 50px 0 25px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .section-title h2 { font-size: 1.5rem; color: #f1f5f9; }
+            .section-title span { color: #64748b; font-size: 0.9rem; }
+            
+            .category-section { margin-bottom: 40px; }
+            .category-title {
+                font-size: 1.1rem;
+                color: #94a3b8;
+                margin-bottom: 20px;
+                padding-left: 10px;
+                border-left: 3px solid #00d4ff;
+            }
+            
+            .brand-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 16px;
+            }
+            .brand-card {
+                background: rgba(30, 41, 59, 0.6);
+                border-radius: 16px;
+                padding: 20px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 2px solid transparent;
+                position: relative;
+                overflow: hidden;
+            }
+            .brand-card:hover {
+                transform: translateY(-4px);
+                background: rgba(30, 41, 59, 0.9);
+                border-color: rgba(0, 212, 255, 0.3);
+            }
+            .brand-card.selected {
+                border-color: #00d4ff;
+                background: rgba(0, 212, 255, 0.1);
+            }
+            .brand-card.selected::after {
+                content: "✓";
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 24px;
+                height: 24px;
+                background: #00d4ff;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                color: #0f172a;
+                font-weight: bold;
+            }
+            
+            .brand-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+            .brand-color {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                border: 2px solid rgba(255,255,255,0.1);
+                flex-shrink: 0;
+            }
+            .brand-name {
+                font-size: 1rem;
+                font-weight: 600;
+                color: #f1f5f9;
+            }
+            .brand-desc {
+                font-size: 0.8rem;
+                color: #64748b;
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            
+            .footer { text-align: center; margin-top: 60px; padding: 30px; color: #64748b; font-size: 0.9rem; }
+            
+            .back-btn {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                padding: 12px 24px;
+                background: rgba(30, 41, 59, 0.8);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                color: #fff;
+                text-decoration: none;
+                font-size: 0.95rem;
+                transition: all 0.3s;
+                z-index: 100;
+                backdrop-filter: blur(10px);
+            }
+            .back-btn:hover {
+                background: rgba(30, 41, 59, 1);
+                border-color: #00d4ff;
+                color: #00d4ff;
+            }
+            
+            @media (max-width: 768px) {
+                .header h1 { font-size: 2rem; }
+                .brand-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+                .input-group { flex-direction: column; }
+            }
+        </style>
+    </head>
+    <body>
+        <a href="/" class="back-btn">← 返回首页</a>
+        <div class="container">
+            <div class="header">
+                <h1>🎨 视觉引擎 v2.0</h1>
+                <p>选择设计系统，AI 为你生成像素级还原的专业 UI</p>
+            </div>
+            
+            <!-- AI 生成器 -->
+            <div class="ai-generator">
+                <h2>💡 描述你的设计需求</h2>
+                <div id="selectedBrandDisplay" style="display:none;">
+                    <div class="selected-brand">
+                        <span>已选择设计系统:</span>
+                        <span class="color-dot" id="selectedColorDot"></span>
+                        <span id="selectedBrandName"></span>
+                        <span class="clear-btn" onclick="clearBrand()">✕</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <textarea id="requirement" placeholder="描述你的设计需求，例如：
+- 做一个 SaaS 产品的落地页，带定价区块
+- 简洁的登录页面，深色主题
+- 电商首页，卡片式布局展示商品
+- 仪表盘界面，数据可视化"></textarea>
+                </div>
+                <button class="btn-generate" onclick="generateDesign()">🚀 生成设计</button>
+                
+                <div class="generate-result" id="result">
+                    <h4>🎉 生成完成！</h4>
+                    <pre id="code-preview"></pre>
+                    <button class="preview-btn" onclick="previewDesign()">👁 在新窗口预览</button>
+                </div>
+            </div>
+            
+            <!-- 设计系统选择器 -->
+            <div class="section-title">
+                <h2>🎨 选择设计系统</h2>
+                <span>共 ''' + str(len(brands)) + ''' 个品牌</span>
+            </div>
+    '''
+    
+    # 按分类显示品牌卡片
+    for category, cat_brands in brands_by_category.items():
+        html += f'''
+            <div class="category-section">
+                <div class="category-title">{category}</div>
+                <div class="brand-grid">
+        '''
+        for brand in cat_brands:
+            primary_color = brand.get("primary_color", "#3B82F6")
+            desc = brand.get("description", "") or f"使用 {brand['name']} 的设计系统"
+            html += f'''
+                    <div class="brand-card" data-brand="{brand['id']}" data-name="{brand['name']}" data-color="{primary_color}" onclick="selectBrand(this)">
+                        <div class="brand-header">
+                            <div class="brand-color" style="background: {primary_color}"></div>
+                            <div class="brand-name">{brand['name']}</div>
+                        </div>
+                        <div class="brand-desc">{desc}</div>
+                    </div>
+            '''
+        html += '''
+                </div>
+            </div>
+        '''
+    
+    html += '''
+            <div class="footer">
+                <p>🦞 小龙虾智能助手 | 视觉引擎 v2.0 | 基于 awesome-design-md</p>
+            </div>
+        </div>
+        
+        <script>
+        let selectedBrand = null;
+        
+        function selectBrand(card) {
+            // 移除其他选中状态
+            document.querySelectorAll('.brand-card').forEach(c => c.classList.remove('selected'));
+            
+            // 切换当前选中状态
+            if (selectedBrand === card.dataset.brand) {
+                selectedBrand = null;
+                card.classList.remove('selected');
+                document.getElementById('selectedBrandDisplay').style.display = 'none';
+            } else {
+                selectedBrand = card.dataset.brand;
+                card.classList.add('selected');
+                document.getElementById('selectedBrandName').textContent = card.dataset.name;
+                document.getElementById('selectedColorDot').style.background = card.dataset.color;
+                document.getElementById('selectedBrandDisplay').style.display = 'block';
+            }
+        }
+        
+        function clearBrand() {
+            selectedBrand = null;
+            document.querySelectorAll('.brand-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('selectedBrandDisplay').style.display = 'none';
+        }
+        
+        async function generateDesign() {
+            const requirement = document.getElementById("requirement").value;
+            if (!requirement.trim()) {
+                alert("请输入设计需求");
+                return;
+            }
+            
+            const btn = document.querySelector(".btn-generate");
+            btn.disabled = true;
+            btn.textContent = "生成中...";
+            
+            try {
+                const requestBody = { requirement };
+                if (selectedBrand) {
+                    requestBody.design_system = selectedBrand;
+                }
+                
+                const response = await fetch("/vision_engine/generate", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById("code-preview").textContent = data.html;
+                    document.getElementById("result").classList.add("show");
+                    document.getElementById("result").scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert("生成失败: " + data.error);
+                }
+            } catch (e) {
+                alert("请求失败: " + e);
+            }
+            
+            btn.disabled = false;
+            btn.textContent = "🚀 生成设计";
+        }
+        
+        function previewDesign() {
+            const html = document.getElementById("code-preview").textContent;
+            const blob = new Blob([html], {type: "text/html"});
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+        }
+        </script>
+    </body>
+    </html>
+    '''
+    
+    return html
+
+@app.route('/vision_engine/<path:filename>')
+def vision_engine_file(filename):
+    """视觉引擎 - 显示具体HTML文件"""
+    # 安全检查：只允许HTML文件
+    if not filename.endswith('.html'):
+        return "只允许查看HTML文件", 400
+    
+    # 防止路径遍历攻击
+    filename = os.path.basename(filename)
+    
+    file_path = os.path.join(VISION_ENGINE_DIR, filename)
+    
+    if not os.path.exists(file_path):
+        return f"文件不存在: {filename}", 404
+    
+    return send_from_directory(VISION_ENGINE_DIR, filename)
+
+@app.route('/vision_engine/generate', methods=['POST'])
+def vision_engine_generate():
+    """视觉引擎 - AI 生成设计 (支持设计系统选择)"""
+    import json
+    
+    data = request.get_json()
+    requirement = data.get('requirement', '')
+    design_system_brand = data.get('design_system', None)
+    
+    if not requirement:
+        return jsonify({"success": False, "error": "请输入设计需求"})
+    
+    try:
+        # 导入视觉引擎生成器
+        from vision_engine_generator import generate
+        result = generate(requirement, design_system_brand)
+        return jsonify(result)
+    except Exception as e:
+        import traceback
+        return jsonify({"success": False, "error": str(e), "traceback": traceback.format_exc()})
+
+# 保留 generate_simple_design 作为备用
+
+def generate_simple_design(requirement):
+    """简单的设计生成器（当 API 不可用时使用）"""
+    
+    # 分析需求关键词
+    req_lower = requirement.lower()
+    
+    # 确定配色
+    colors = {
+        "primary": "#6366f1",
+        "secondary": "#8b5cf6", 
+        "background": "#0f172a",
+        "text": "#f8fafc",
+        "accent": "#06b6d4"
+    }
+    
+    if "美容" in requirement or "SPA" in requirement or "spa" in req_lower:
+        colors = {"primary": "#E8B4B8", "secondary": "#A8D5BA", "background": "#FFF5F5", "text": "#2D3436", "accent": "#D4AF37"}
+    elif "登录" in requirement or "login" in req_lower:
+        colors = {"primary": "#3b82f6", "secondary": "#1e40af", "background": "#1e293b", "text": "#f1f5f9", "accent": "#60a5fa"}
+    elif "深色" in requirement or "dark" in req_lower:
+        colors = {"primary": "#8b5cf6", "secondary": "#a855f7", "background": "#0a0a0a", "text": "#e2e8f0", "accent": "#c084fc"}
+    elif "温暖" in requirement or "橙色" in requirement or "餐厅" in requirement:
+        colors = {"primary": "#f97316", "secondary": "#ea580c", "background": "#fff7ed", "text": "#1f2937", "accent": "#fb923c"}
+    elif "金融" in requirement or "银行" in requirement:
+        colors = {"primary": "#059669", "secondary": "#047857", "background": "#f0fdf4", "text": "#1f2937", "accent": "#fbbf24"}
+    elif "健身" in requirement or "运动" in requirement:
+        colors = {"primary": "#f59e0b", "secondary": "#d97706", "background": "#18181b", "text": "#fafafa", "accent": "#ef4444"}
+    
+    # 生成 HTML
+    html = f'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 生成的设计</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {{
+            --primary: {colors['primary']};
+            --secondary: {colors['secondary']};
+            --background: {colors['background']};
+            --text: {colors['text']};
+            --accent: {colors['accent']};
+        }}
+        
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        
+        body {{
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }}
+        
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }}
+        
+        header {{
+            text-align: center;
+            padding: 60px 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        
+        header h1 {{
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }}
+        
+        header p {{
+            font-size: 1.25rem;
+            opacity: 0.9;
+            color: var(--text);
+        }}
+        
+        .hero {{
+            background: linear-gradient(135deg, var(--primary)20, var(--secondary)20);
+            border-radius: 24px;
+            padding: 80px 40px;
+            text-align: center;
+            margin: 40px 0;
+            border: 1px solid var(--primary)30;
+        }}
+        
+        .hero h2 {{
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }}
+        
+        .btn {{
+            display: inline-block;
+            padding: 16px 40px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }}
+        
+        .btn:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px var(--primary)40;
+        }}
+        
+        .features {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }}
+        
+        .feature-card {{
+            background: var(--primary)10;
+            border: 1px solid var(--primary)20;
+            border-radius: 16px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }}
+        
+        .feature-card:hover {{
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }}
+        
+        .feature-card h3 {{
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }}
+        
+        footer {{
+            text-align: center;
+            padding: 40px;
+            margin-top: 60px;
+            border-top: 1px solid var(--primary)20;
+            opacity: 0.7;
+        }}
+        
+        @media (max-width: 768px) {{
+            header h1 {{ font-size: 2rem; }}
+            .hero {{ padding: 40px 20px; }}
+            .hero h2 {{ font-size: 1.75rem; }}
+        }}
+        
+        /* 动画 */
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(20px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        
+        .hero {{ animation: fadeIn 0.6s ease-out; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ AI 设计展示</h1>
+            <p>需求: {requirement}</p>
+        </header>
+        
+        <section class="hero">
+            <h2>欢迎体验</h2>
+            <p style="margin-bottom: 30px; font-size: 1.1rem;">
+                这是一个由 AI 生成的现代化 UI 页面设计<br>
+                配色方案: {colors['primary']} + {colors['secondary']}
+            </p>
+            <button class="btn">开始探索</button>
+        </section>
+        
+        <section class="features">
+            <div class="feature-card">
+                <h3>🎨 专业设计</h3>
+                <p>采用现代设计趋势，结合用户体验最佳实践，打造专业级界面。</p>
+            </div>
+            <div class="feature-card">
+                <h3>📱 响应式布局</h3>
+                <p>完美适配手机、平板、桌面等各种设备屏幕尺寸。</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ 流畅动画</h3>
+                <p>精心设计的交互动画，让用户体验更加流畅自然。</p>
+            </div>
+        </section>
+        
+        <footer>
+            <p>🦞 视觉引擎 AI 生成 | {colors['primary']} 主题</p>
+        </footer>
+    </div>
+</body>
+</html>'''
+    
+    return html
+
 # 添加对根目录.md文件的支持（为了兼容旧的路径）
 @app.route('/USER.md')
 @app.route('/SOUL.md')
@@ -1389,6 +2178,66 @@ def list_memory_files():
     html += "</ul>\n</body>\n</html>"
     
     return html
+
+# ==================== 文件写入API ====================
+@app.route('/api/files/write', methods=['POST'])
+def write_file():
+    """写入文件内容API（带备份和失败回滚）"""
+    import os
+    import shutil
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "error": "No data provided"}), 400
+    
+    file_path = data.get('path')
+    content = data.get('content')
+    
+    if not file_path or content is None:
+        return jsonify({"success": False, "error": "Missing path or content"}), 400
+    
+    # 安全检查：只允许写入.md文件
+    if not file_path.endswith('.md'):
+        return jsonify({"success": False, "error": "Only .md files are allowed"}), 400
+    
+    # 基础目录
+    base_dir = "/root/.openclaw/workspace"
+    
+    # 解析真实路径
+    if file_path.startswith('memory/'):
+        full_path = os.path.join(base_dir, file_path)
+    elif file_path in ['SOUL.md', 'USER.md', 'AGENTS.md', 'IDENTITY.md', 'TOOLS.md', 'HEARTBEAT.md', 'MEMORY.md', 'MUSK.md']:
+        full_path = os.path.join(base_dir, file_path)
+    else:
+        return jsonify({"success": False, "error": "Invalid file path"}), 400
+    
+    # 检查文件是否存在
+    if not os.path.exists(full_path):
+        return jsonify({"success": False, "error": "File not found"}), 404
+    
+    backup_path = full_path + '.bak'
+    
+    try:
+        # 步骤1：备份原文件
+        shutil.copy2(full_path, backup_path)
+        
+        # 步骤2：写入新内容
+        with open(full_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        # 步骤3：成功，删除备份文件
+        if os.path.exists(backup_path):
+            os.remove(backup_path)
+        
+        return jsonify({"success": True, "message": "File saved successfully"})
+    
+    except Exception as e:
+        # 失败，还原备份
+        if os.path.exists(backup_path):
+            shutil.copy2(backup_path, full_path)
+            os.remove(backup_path)
+        
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # ==================== 主程序 ====================
 if __name__ == '__main__':
@@ -1717,11 +2566,15 @@ def douyin_emo_videos():
             })
     
     videos_html = ''
-    for v in videos:
+    for i, v in enumerate(videos):
         videos_html += f'''
-        <div class="video-card">
-            <video controls preload="metadata">
-                <source src="{v['url']}" type="video/mp4">
+        <div class="video-card" data-index="{i}">
+            <div class="video-placeholder" id="placeholder-{i}" data-url="{v['url']}" onclick="loadVideo({i}, '{v['url']}')">
+                <div class="loading-spinner"></div>
+                <span>点击加载视频 {i+1}</span>
+            </div>
+            <video id="video-{i}" controls style="display:none;" oncanplay="videoLoaded({i})" onerror="videoError({i})">
+                <source src="" type="video/mp4">
                 您的浏览器不支持视频播放
             </video>
             <div class="video-info">
@@ -1826,6 +2679,38 @@ def douyin_emo_videos():
                 background: #000;
             }}
             
+            .video-placeholder {{
+                width: 100%;
+                aspect-ratio: 9/16;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: white;
+                font-size: 14px;
+                transition: all 0.3s ease;
+            }}
+            
+            .video-placeholder:hover {{
+                transform: scale(1.02);
+            }}
+            
+            .loading-spinner {{
+                width: 40px;
+                height: 40px;
+                border: 4px solid rgba(255,255,255,0.3);
+                border-top-color: white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-bottom: 10px;
+            }}
+            
+            @keyframes spin {{
+                to {{ transform: rotate(360deg); }}
+            }}
+            
             .video-info {{
                 padding: 20px;
             }}
@@ -1898,6 +2783,65 @@ def douyin_emo_videos():
                 {videos_html}
             </div>
             
+            <script>
+            let loadingQueue = [];
+            let isLoading = false;
+            let loadedCount = 0;
+            const totalVideos = document.querySelectorAll('.video-card').length;
+            
+            function loadVideo(index, url) {{
+                const placeholder = document.getElementById('placeholder-' + index);
+                const video = document.getElementById('video-' + index);
+                
+                placeholder.innerHTML = '<div class="loading-spinner"></div><span>加载中...</span>';
+                
+                const source = video.querySelector('source');
+                source.src = url;
+                video.load();
+            }}
+            
+            function videoLoaded(index) {{
+                const placeholder = document.getElementById('placeholder-' + index);
+                const video = document.getElementById('video-' + index);
+                
+                placeholder.style.display = 'none';
+                video.style.display = 'block';
+                loadedCount++;
+                
+                // 自动加载下一个
+                if (loadedCount < totalVideos) {{
+                    const nextIndex = index + 1;
+                    if (nextIndex < totalVideos) {{
+                        const nextPlaceholder = document.getElementById('placeholder-' + nextIndex);
+                        if (nextPlaceholder && nextPlaceholder.style.display !== 'none') {{
+                            const url = nextPlaceholder.getAttribute('data-url');
+                            if (url) {{
+                                setTimeout(() => {{
+                                    loadVideo(nextIndex, url);
+                                }}, 500);
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+            
+            function videoError(index) {{
+                const placeholder = document.getElementById('placeholder-' + index);
+                placeholder.innerHTML = '<span>加载失败，点击重试</span>';
+            }}
+            
+            // 页面加载后自动开始逐个加载
+            window.addEventListener('DOMContentLoaded', function() {{
+                setTimeout(() => {{
+                    const firstPlaceholder = document.getElementById('placeholder-0');
+                    if (firstPlaceholder) {{
+                        const url = firstPlaceholder.getAttribute('data-url');
+                        if (url) loadVideo(0, url);
+                    }}
+                }}, 500);
+            }});
+            </script>
+            
             <div class="footer">
                 <p>🎬 抖音共鸣系统 | 视频列表</p>
             </div>
@@ -1913,7 +2857,10 @@ def douyin_emo_video_static(filename):
     """抖音EMO视频静态文件"""
     video_path = f'/root/.openclaw/workspace/douyin_emo/output/videos/{filename}'
     if os.path.exists(video_path):
-        return send_file(video_path)
+        # Flask send_file 默认支持 Range 请求，无需手动添加
+        response = make_response(send_file(video_path, mimetype='video/mp4'))
+        response.headers['Cache-Control'] = 'public, max-age=3600'
+        return response
     return "视频文件不存在", 404
 
 # ==================== 抖音EMO钩子预览 ====================
@@ -1926,7 +2873,427 @@ def emo_hooks_preview():
         return send_file(html_path)
     return "emo_hooks_preview.html 文件不存在", 404
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=CONFIG['PORT'], debug=CONFIG['DEBUG'])
+# ==================== GitHub Trending ====================
+import json
+
+@app.route('/github_trending')
+@app.route('/github_trending.html')
+def github_trending_index():
+    """GitHub Trending 展示页面 - 三页签"""
+    data_file = "/root/.openclaw/workspace/github_trending.json"
+    
+    data = {
+        "date": "",
+        "update_time": "",
+        "alltime_repos": [],
+        "new_100days_repos": [],
+        "growth_repos": []
+    }
+    
+    if os.path.exists(data_file):
+        try:
+            with open(data_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except:
+            pass
+    
+    # 兼容旧数据格式
+    alltime_repos = data.get('alltime_repos', data.get('hot_repos', []))
+    new_100days_repos = data.get('new_100days_repos', [])
+    growth_repos = data.get('growth_repos', [])
+    
+    html = '''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Trending - 小龙虾多功能平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; color: #fff; }
+        .container { padding-top: 2rem; }
+        .card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .repo-card { transition: transform 0.2s; min-height: 200px; }
+        .repo-card .card-body { overflow-y: auto; max-height: 280px; }
+        .repo-card:hover { transform: translateY(-5px); }
+        .stars { color: #ffd700; }
+        .growth { color: #00ff88; font-weight: bold; }
+        .language-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .update-time { color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+        .header { text-align: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .refresh-btn { position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; border-radius: 50%; }
+        
+        /* Tab样式 */
+        .nav-tabs { border-bottom: 2px solid rgba(255,255,255,0.2); margin-bottom: 2rem; }
+        .nav-tabs .nav-link { 
+            color: rgba(255,255,255,0.7); 
+            border: none; 
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            background: transparent;
+        }
+        .nav-tabs .nav-link:hover { color: #fff; border: none; }
+        .nav-tabs .nav-link.active { 
+            background: rgba(255,255,255,0.1) !important; 
+            color: #fff !important; 
+            border: none;
+            border-bottom: 3px solid #00ff88;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="bi bi-github"></i> GitHub Trending</h1>
+            <p class="update-time">📅 ''' + data.get('date', '') + ''' | 🕐 更新于 ''' + data.get('update_time', '') + '''</p>
+            <a href="/" class="btn btn-outline-light btn-sm"><i class="bi bi-house"></i> 返回首页</a>
+        </div>
+        
+        <!-- 页签导航 -->
+        <ul class="nav nav-tabs justify-content-center" id="repoTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="alltime-tab" data-bs-toggle="tab" data-bs-target="#alltime" type="button" role="tab">
+                    📊 历史最多star
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new" type="button" role="tab">
+                    🆕 近100天创建
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="growth-tab" data-bs-toggle="tab" data-bs-target="#growth" type="button" role="tab">
+                    📈 增长最快
+                </button>
+            </li>
+        </ul>
+        
+        <!-- 页签1: 历史最多star -->
+        <div class="tab-content active" id="alltime">
+            <div class="row">'''
+    
+    # 页签1：历史最多star
+    for i, repo in enumerate(alltime_repos, 1):
+        lang = repo.get('language', '')
+        lang_display = f'<span class="language-badge">{lang}</span>' if lang else ''
+        
+        html += f'''
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card repo-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-danger me-2">#{i}</span>
+                                <a href="{repo['url']}" target="_blank" style="color: #fff;">{repo['repo']}</a>
+                            </h5>
+                            <p class="card-text text-light">{repo.get('description', '暂无描述')}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="stars"><i class="bi bi-star-fill"></i> {repo.get('stars_formatted', '0')}</span>
+                                {lang_display}
+                            </div>
+                        </div>
+                    </div>
+                </div>'''
+    
+    html += '''
+            </div>
+        </div>
+        
+        <!-- 页签2: 近100天创建 -->
+        <div class="tab-content" id="new">
+            <div class="row">'''
+    
+    # 页签2：近100天创建新项目
+    for i, repo in enumerate(new_100days_repos, 1):
+        lang = repo.get('language', '')
+        lang_display = f'<span class="language-badge">{lang}</span>' if lang else ''
+        created = repo.get('created_at', '')
+        
+        html += f'''
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card repo-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-primary me-2">#{i}</span>
+                                <a href="{repo['url']}" target="_blank" style="color: #fff;">{repo['repo']}</a>
+                            </h5>
+                            <p class="card-text text-light">{repo.get('description', '暂无描述')}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="stars"><i class="bi bi-star-fill"></i> {repo.get('stars_formatted', '0')}</span>
+                                {lang_display}
+                            </div>
+                            <p class="text-muted small mt-2">📅 创建于 {created}</p>
+                        </div>
+                    </div>
+                </div>'''
+    
+    html += '''
+            </div>
+        </div>
+        
+        <!-- 页签3: 增长最快 -->
+        <div class="tab-content" id="growth">
+            <div class="row">'''
+    
+    # 页签3：增长最快
+    for i, repo in enumerate(growth_repos, 1):
+        lang = repo.get('language', '')
+        lang_display = f'<span class="language-badge">{lang}</span>' if lang else ''
+        
+        # 增长量显示
+        growth = repo.get('today_growth', 0)
+        if growth > 0:
+            growth_display = f'<span class="growth"><i class="bi bi-arrow-up"></i> +{growth:,}</span>'
+        elif repo.get('growth_formatted') == 'new':
+            growth_display = '<span class="text-info">🆕 新项目</span>'
+        else:
+            growth_display = ''
+        
+        html += f'''
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card repo-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-success me-2">#{i}</span>
+                                <a href="{repo['url']}" target="_blank" style="color: #fff;">{repo['repo']}</a>
+                                {growth_display}
+                            </h5>
+                            <p class="card-text text-light">{repo.get('description', '暂无描述')}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="stars"><i class="bi bi-star-fill"></i> {repo.get('stars_formatted', '0')}</span>
+                                {lang_display}
+                            </div>
+                        </div>
+                    </div>
+                </div>'''
+    
+    html += '''
+            </div>
+        </div>
+    </div>
+    
+    <a href="/github_trending_refresh" class="btn btn-primary refresh-btn" title="刷新数据">
+        <i class="bi bi-arrow-clockwise"></i>
+    </a>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页签切换
+        document.querySelectorAll('#repoTabs .nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', event => {
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                const target = event.target.getAttribute('data-bs-target');
+                document.querySelector(target).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>'''
+    
+    return html
+
+@app.route('/github_trending_refresh')
+def github_trending_refresh():
+    """手动刷新 GitHub Trending 数据"""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ['python3', '/root/.openclaw/workspace/github_trending.py'],
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        if result.returncode == 0:
+            return redirect('/github_trending')
+        else:
+            return f"刷新失败: {result.stderr}", 500
+    except Exception as e:
+        return f"刷新失败: {str(e)}", 500
+
+@app.route('/api/github_trending')
+def github_trending_api():
+    """GitHub Trending API"""
+    data_file = "/root/.openclaw/workspace/github_trending.json"
+    
+    if os.path.exists(data_file):
+        try:
+            with open(data_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass
+    
+    return jsonify({"error": "暂无数据"})
+
+# ==================== STT 语音转文字服务 ====================
+import requests as proxy_requests
+from werkzeug.datastructures import FileStorage
+
+# 简单的反向代理到 STT 服务
+@app.route('/stt', defaults={'path': ''})
+@app.route('/stt/', defaults={'path': ''})
+@app.route('/stt/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+def stt_proxy(path):
+    """STT 服务反向代理"""
+    try:
+        # 构建目标 URL
+        target_url = f'http://127.0.0.1:5000/{path}'
+        
+        # 复制请求头（排除某些头）
+        headers = {}
+        for key, value in request.headers:
+            if key.lower() not in ['host', 'content-length']:
+                headers[key] = value
+        
+        # 处理文件上传
+        if request.files:
+            # 有文件上传时，使用 files 参数
+            files = {}
+            for key, file_storage in request.files.items():
+                # FileStorage 对象可以直接用于 requests
+                files[key] = (file_storage.filename, file_storage.stream, file_storage.content_type)
+            
+            # 转发请求
+            resp = proxy_requests.request(
+                method=request.method,
+                url=target_url,
+                headers=headers,
+                files=files,
+                data=request.form if request.form else None,
+                params=request.args,
+                timeout=300,
+                allow_redirects=False
+            )
+        else:
+            # 普通请求
+            resp = proxy_requests.request(
+                method=request.method,
+                url=target_url,
+                headers=headers,
+                data=request.get_data() if request.method in ['POST', 'PUT', 'PATCH'] else None,
+                params=request.args,
+                timeout=60,
+                allow_redirects=False
+            )
+        
+        # 构建响应
+        response = make_response(resp.content)
+        response.status_code = resp.status_code
+        
+        # 复制响应头
+        for key, value in resp.headers.items():
+            if key.lower() not in ['content-encoding', 'transfer-encoding', 'connection', 'content-length']:
+                response.headers[key] = value
+        
+        return response
+        
+    except Exception as e:
+        import traceback
+        print(f"STT 代理错误: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({"success": False, "message": f"代理请求失败: {str(e)}"}), 502
+
+
+# ==================== 币安人生文件服务 ====================
+# 将 workspace/币安人生 目录映射到 /file/ 路径
+BIZARRE_PATH = "/root/.openclaw/workspace/币安人生"
+
+@app.route('/file/')
+def file_index():
+    """币安人生文件列表"""
+    try:
+        files = []
+        for f in os.listdir(BIZARRE_PATH):
+            file_path = os.path.join(BIZARRE_PATH, f)
+            if os.path.isfile(file_path):
+                stat = os.stat(file_path)
+                files.append({
+                    "name": f,
+                    "size": stat.st_size,
+                    "size_human": f"{stat.st_size / 1024 / 1024:.2f} MB" if stat.st_size > 1024*1024 else f"{stat.st_size / 1024:.2f} KB",
+                    "modified": datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
+                    "url": f"/file/{f}"
+                })
+        
+        # 按修改时间倒序
+        files.sort(key=lambda x: x["modified"], reverse=True)
+        
+        html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>币安人生 - 文件列表</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 1200px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+                h1 { color: #333; border-bottom: 2px solid #f0b90b; padding-bottom: 10px; }
+                table { width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                th { background: #f0b90b; color: #000; padding: 15px; text-align: left; font-weight: 600; }
+                td { padding: 12px 15px; border-bottom: 1px solid #eee; }
+                tr:hover { background: #f9f9f9; }
+                a { color: #f0b90b; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+                .file-icon { font-size: 1.2em; margin-right: 8px; }
+                .back-link { display: inline-block; margin-top: 20px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <h1>📁 币安人生 - 文件列表</h1>
+            <table>
+                <tr>
+                    <th>文件名</th>
+                    <th>大小</th>
+                    <th>修改时间</th>
+                    <th>操作</th>
+                </tr>
+        """
+        
+        for f in files:
+            icon = "🎬" if f["name"].endswith((".mp4", ".m4v", ".mkv")) else "🎵" if f["name"].endswith((".mp3", ".m4a", ".wav")) else "📄" if f["name"].endswith((".md", ".txt")) else "📎"
+            html += f"""
+                <tr>
+                    <td><span class="file-icon">{icon}</span>{f["name"]}</td>
+                    <td>{f["size_human"]}</td>
+                    <td>{f["modified"]}</td>
+                    <td><a href="{f["url"]}" target="_blank">查看 / 下载</a></td>
+                </tr>
+            """
+        
+        html += """
+            </table>
+            <a href="/" class="back-link">← 返回首页</a>
+        </body>
+        </html>
+        """
+        return render_template_string(html)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/file/<path:filename>')
+def file_serve(filename):
+    """提供币安人生目录中的文件"""
+    try:
+        # 安全检查：防止目录遍历攻击
+        if ".." in filename or filename.startswith("/"):
+            return jsonify({"error": "非法文件名"}), 400
+        
+        file_path = os.path.join(BIZARRE_PATH, filename)
+        
+        # 确保文件在目标目录内
+        if not os.path.abspath(file_path).startswith(os.path.abspath(BIZARRE_PATH)):
+            return jsonify({"error": "访问被拒绝"}), 403
+        
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+            return jsonify({"error": "文件不存在"}), 404
+        
+        return send_from_directory(BIZARRE_PATH, filename, as_attachment=False)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=CONFIG["PORT"], debug=CONFIG["DEBUG"])

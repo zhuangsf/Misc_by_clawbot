@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>抖音直播挂机助手 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+        .header h1 { font-size: 24px; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card h2 { font-size: 18px; margin-bottom: 15px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .btn { display: inline-block; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .btn:hover { background: #5568d3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .form-group input:focus { outline: none; border-color: #667eea; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; color: #666; }
+        .status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+        .status-online { background: #d4edda; color: #155724; }
+        .status-offline { background: #f8f9fa; color: #6c757d; }
+        .status-running { background: #cce5ff; color: #004085; }
+        .status-banned { background: #f8d7da; color: #721c24; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 10px; padding: 30px; max-width: 500px; width: 90%; }
+        .modal-header { font-size: 20px; font-weight: bold; margin-bottom: 20px; }
+        .modal-footer { margin-top: 20px; text-align: right; }
+        .modal-footer .btn { margin-left: 10px; }
+        .qr-box { text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px; margin: 15px 0; }
+        .alert { padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+        .alert-info { background: #cce5ff; color: #004085; }
+        .empty { text-align: center; padding: 40px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🦞 抖音直播挂机助手 - 管理后台</h1>
+    </div>
+    
+    <div class="container">
+        <!-- 账号管理 -->
+        <div class="card">
+            <h2>📱 账号管理</h2>
+            <button class="btn" onclick="showAddAccount()">+ 添加账号</button>
+            <button class="btn" onclick="loadAccounts()">🔄 刷新</button>
+            <div style="margin-top: 15px;">
+                <table id="accountsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>账号名称</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountsBody">
+                        <tr><td colspan="5" class="empty">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 任务管理 -->
+        <div class="card">
+            <h2>🎯 任务管理</h2>
+            <button class="btn btn-success" onclick="showCreateTask()">+ 创建任务</button>
+            <button class="btn" onclick="loadTasks()">🔄 刷新</button>
+            <div style="margin-top: 15px;">
+                <table id="tasksTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>直播间ID</th>
+                            <th>使用账号</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksBody">
+                        <tr><td colspan="6" class="empty">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 日志 -->
+        <div class="card">
+            <h2>📋 运行日志</h2>
+            <button class="btn" onclick="loadLogs()">🔄 刷新日志</button>
+            <div id="logsBox" style="margin-top: 15px; max-height: 300px; overflow-y: auto; background: #1a1a1a; color: #0f0; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px;">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加账号弹窗 -->
+    <div class="modal" id="addAccountModal">
+        <div class="modal-content">
+            <div class="modal-header">添加账号</div>
+            <div class="form-group">
+                <label>账号名称</label>
+                <input type="text" id="accountName" placeholder="输入账号名称">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('addAccountModal')">取消</button>
+                <button class="btn btn-success" onclick="addAccount()">添加并扫码登录</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 扫码登录弹窗 -->
+    <div class="modal" id="qrcodeModal">
+        <div class="modal-content">
+            <div class="modal-header">📱 扫码登录</div>
+            <div class="qr-box">
+                <p>请在弹出的浏览器窗口中扫码登录抖音</p>
+                <p style="margin-top: 10px; color: #666;">扫码完成后点击"我已完成扫码"</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="checkLoginStatus()">我已完成扫码</button>
+                <button class="btn" onclick="closeModal('qrcodeModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 创建任务弹窗 -->
+    <div class="modal" id="createTaskModal">
+        <div class="modal-content">
+            <div class="modal-header">创建挂机任务</div>
+            <div class="form-group">
+                <label>直播间ID</label>
+                <input type="text" id="roomId" placeholder="输入抖音直播间ID">
+            </div>
+            <div class="form-group">
+                <label>选择账号（可多选）</label>
+                <div id="accountCheckboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('createTaskModal')">取消</button>
+                <button class="btn btn-success" onclick="createTask()">创建并启动</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 消息提示 -->
+    <div id="messageBox" style="position: fixed; top: 20px; right: 20px; z-index: 2000;"></div>
+
+    <script>
+        let currentLoginAccountId = null;
+        
+        // 初始化
+        window.onload = function() {
+            loadAccounts();
+            loadTasks();
+            loadLogs();
+        };
+        
+        // 显示消息
+        function showMessage(text, type = 'info') {
+            const box = document.getElementById('messageBox');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = text;
+            box.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+        
+        // 加载账号
+        function loadAccounts() {
+            fetch('/api/accounts')
+                .then(r => r.json())
+                .then(res => {
+                    const tbody = document.getElementById('accountsBody');
+                    if (res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无账号，请添加</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = res.data.map(a => `
+                        <tr>
+                            <td>${a.id}</td>
+                            <td>${a.name}</td>
+                            <td><span class="status status-${a.status}">${a.status}</span></td>
+                            <td>${a.created_at}</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="loginAccount(${a.id})">登录</button>
+                                <button class="btn btn-danger" onclick="deleteAccount(${a.id})">删除</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
+        
+        // 添加账号
+        function showAddAccount() {
+            document.getElementById('addAccountModal').classList.add('show');
+            document.getElementById('accountName').value = '';
+        }
+        
+        function addAccount() {
+            const name = document.getElementById('accountName').value || '账号' + Date.now();
+            fetch('/api/accounts', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: name})
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.code === 0) {
+                    closeModal('addAccountModal');
+                    showMessage('账号添加成功', 'success');
+                    loadAccounts();
+                    // 自动触发登录
+                    setTimeout(() => loginAccount(res.account_id), 500);
+                }
+            });
+        }
+        
+        // 账号登录
+        function loginAccount(accountId) {
+            currentLoginAccountId = accountId;
+            document.getElementById('qrcodeModal').classList.add('show');
+            
+            // 触发后端启动登录流程
+            fetch(`/api/accounts/${accountId}/login`, {
+                method: 'POST'
+            })
+            .then(r => r.json())
+            .then(res => {
+                showMessage('请在弹出的浏览器窗口中扫码登录', 'info');
+            });
+        }
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            if (!currentLoginAccountId) return;
+            
+            fetch(`/api/accounts/${currentLoginAccountId}/login`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.logged_in) {
+                        showMessage('登录成功！', 'success');
+                        closeModal('qrcodeModal');
+                        loadAccounts();
+                    } else {
+                        showMessage('尚未登录成功，请继续扫码', 'error');
+                    }
+                });
+        }
+        
+        // 删除账号
+        function deleteAccount(id) {
+            if (!confirm('确定删除该账号？')) return;
+            fetch(`/api/accounts/${id}`, {method: 'DELETE'})
+                .then(r => r.json())
+                .then(res => {
+                    showMessage('账号已删除', 'success');
+                    loadAccounts();
+                });
+        }
+        
+        // 加载任务
+        function loadTasks() {
+            fetch('/api/tasks')
+                .then(r => r.json())
+                .then(res => {
+                    const tbody = document.getElementById('tasksBody');
+                    if (res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无任务，请创建</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = res.data.map(t => `
+                        <tr>
+                            <td>${t.id}</td>
+                            <td>${t.room_id}</td>
+                            <td>${t.account_ids.join(', ') || '-'}</td>
+                            <td><span class="status status-${t.status}">${t.status}</span></td>
+                            <td>${t.created_at}</td>
+                            <td>
+                                ${t.status === 'running' 
+                                    ? `<button class="btn btn-danger" onclick="stopTask(${t.id})">停止</button>`
+                                    : `<button class="btn btn-success" onclick="startTask(${t.id})">启动</button>`
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+        }
+        
+        // 创建任务
+        function showCreateTask() {
+            document.getElementById('createTaskModal').classList.add('show');
+            document.getElementById('roomId').value = '';
+            
+            // 加载账号列表到复选框
+            fetch('/api/accounts')
+                .then(r => r.json())
+                .then(res => {
+                    const box = document.getElementById('accountCheckboxes');
+                    box.innerHTML = res.data.map(a => `
+                        <label style="display: block; padding: 5px;">
+                            <input type="checkbox" value="${a.id}"> ${a.name} (${a.status})
+                        </label>
+                    `).join('');
+                });
+        }
+        
+        function createTask() {
+            const room_id = document.getElementById('roomId').value;
+            if (!room_id) {
+                showMessage('请输入直播间ID', 'error');
+                return;
+            }
+            
+            const checkboxes = document.querySelectorAll('#accountCheckboxes input:checked');
+            const account_ids = Array.from(checkboxes).map(c => parseInt(c.value));
+            
+            if (account_ids.length === 0) {
+                showMessage('请选择至少一个账号', 'error');
+                return;
+            }
+            
+            fetch('/api/tasks', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({room_id, account_ids})
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.code === 0) {
+                    closeModal('createTaskModal');
+                    showMessage('任务创建成功', 'success');
+                    loadTasks();
+                    // 自动启动
+                    setTimeout(() => startTask(res.task_id), 500);
+                }
+            });
+        }
+        
+        // 启动任务
+        function startTask(id) {
+            fetch(`/api/tasks/${id}/start`, {method: 'POST'})
+                .then(r => r.json())
+                .then(res => {
+                    showMessage('任务已启动', 'success');
+                    loadTasks();
+                });
+        }
+        
+        // 停止任务
+        function stopTask(id) {
+            fetch(`/api/tasks/${id}/stop`, {method: 'POST'})
+                .then(r => r.json())
+                .then(res => {
+                    showMessage('任务已停止', 'info');
+                    loadTasks();
+                });
+        }
+        
+        // 加载日志
+        function loadLogs() {
+            const box = document.getElementById('logsBox');
+            box.innerHTML = '<div style="color: #666;">日志功能开发中...</div>';
+        }
+        
+        // 关闭弹窗
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+        
+        // 点击弹窗外部关闭
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        }
+    </script>
+</body>
+</html>

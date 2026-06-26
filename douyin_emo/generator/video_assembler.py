@@ -217,7 +217,7 @@ PlayResY: 1920
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,WenQuanYi Zen Hei,72,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,0,1,50,50,800,1
+Style: Default,WenQuanYi Zen Hei,72,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,2,0,1,80,80,800,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -227,20 +227,42 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         start = self._format_time(0)
         end = self._format_time(duration)
         
-        # 自动换行处理：每行超过18字则换行
-        def auto_wrap(text: str, max_chars: int = 18) -> str:
-            """长句子自动换行"""
+        # 自动换行处理：每行超过15字则换行
+        def auto_wrap(text: str, max_chars: int = 15) -> str:
+            """
+            长句子自动换行
+            
+            换行规则：
+            1. 优先在符号处换行（，。！？：；）
+            2. 如果没有符号，超过max_chars在中间位置换行
+            """
+            # 符号列表
+            symbols = '，。！？：；'
+            
             lines = text.split('\n')
             wrapped_lines = []
+            
             for line in lines:
                 # 计算字符长度（中英文都算1个字符）
                 if len(line) <= max_chars:
                     wrapped_lines.append(line)
                 else:
-                    # 从中间拆分
-                    mid = len(line) // 2
-                    wrapped_lines.append(line[:mid])
-                    wrapped_lines.append(line[mid:])
+                    # 优先：在符号处找最后一个可换行点
+                    last_symbol_pos = -1
+                    for i, char in enumerate(line):
+                        if char in symbols and i < len(line) - 1:  # 符号后还有内容
+                            last_symbol_pos = i
+                    
+                    if last_symbol_pos > 0:
+                        # 在符号处换行（符号保留在行尾）
+                        wrapped_lines.append(line[:last_symbol_pos + 1])
+                        wrapped_lines.append(line[last_symbol_pos + 1:])
+                    else:
+                        # 没有符号，在中间位置换行
+                        mid = len(line) // 2
+                        wrapped_lines.append(line[:mid])
+                        wrapped_lines.append(line[mid:])
+            
             return '\\N'.join(wrapped_lines)
         
         # 添加事件行（自动换行处理）

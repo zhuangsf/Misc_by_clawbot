@@ -18,7 +18,7 @@ class QianfanClient:
     - QIANFAN_ENDPOINT: 端点地址（默认DeepSeek）
     """
     
-    DEFAULT_ENDPOINT = "https://qianfan.baidubce.com/v2/ai/deepseek-v3"
+    DEFAULT_ENDPOINT = "https://qianfan.baidubce.com/v2/endpoint/deepseek-v3"
     
     def __init__(self, api_key: str = None, endpoint: str = None):
         self.api_key = api_key or os.getenv("QIANFAN_API_KEY") or os.getenv("BAIDU_API_KEY")

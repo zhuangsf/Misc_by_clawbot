@@ -334,7 +334,7 @@ def record_volume_spike(current, previous, volume_ratio):
         price_change_percent = (price_change / current['open'] * 100) if current['open'] > 0 else 0
         price_direction = "涨" if price_change > 0 else ("跌" if price_change < 0 else "平")
         
-        # 准备记录数据
+        # 准备记录数据（包含完整K线数据用于回测）
         record = {
             "timestamp": datetime.now().isoformat(),
             "symbol": CONFIG["SYMBOL"],
@@ -345,6 +345,12 @@ def record_volume_spike(current, previous, volume_ratio):
             "price_change_percent": price_change_percent,
             "price_change": price_change,
             "previous_volume": previous['volume_usdt'],
+            # 完整K线数据（用于回测）
+            "kline_open": current['open'],
+            "kline_high": current.get('high', current['close']),
+            "kline_low": current.get('low', current['close']),
+            "kline_close": current['close'],
+            "kline_timestamp": str(current.get('timestamp', '')),
         }
         
         # 1. 写入SQLite数据库（主存储）

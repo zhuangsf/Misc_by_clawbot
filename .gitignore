@@ -1,0 +1,28 @@
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+*.egg-info/
+
+# Logs - 不提交
+*.log
+logs/
+monitor_viewer.log
+
+# Database - 排除临时数据库，保留 volume_spikes.db 和项目数据库
+# 特殊处理：保留 volume_spikes.db douyin.db hooks.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# OpenClaw
+.openclaw/
+.clawhub/

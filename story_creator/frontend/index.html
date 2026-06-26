@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>故事创作引擎</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4/dist/vue-router.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+        }
+        /* 下拉框样式修复 */
+        select.input {
+            background: rgba(30, 30, 50, 0.9);
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        select.input option {
+            background: rgba(30, 30, 50, 0.95);
+            color: #e0e0e0;
+        }
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #f093fb 100%);
+            transition: width 0.5s ease;
+        }
+        .chat-message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .chat-user {
+            background: rgba(102, 126, 234, 0.3);
+            margin-left: auto;
+        }
+        .chat-ai {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .chapter-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .chapter-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+        .chapter-card.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .role-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .status-构思中 { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .status-框架生成中 { background: rgba(0, 188, 212, 0.2); color: #00bcd4; }
+        .status-框架已生成 { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        .status-创作中 { background: rgba(156, 39, 176, 0.2); color: #9c27b0; }
+        .status-已完成 { background: rgba(33, 150, 243, 0.2); color: #2196f3; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航 -->
+        <nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4" style="background: rgba(26, 26, 46, 0.9); backdrop-filter: blur(10px);">
+            <div class="max-w-6xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📝</span>
+                    <span class="text-xl font-bold">故事创作引擎</span>
+                </div>
+                <div v-if="currentProject" class="flex items-center gap-4">
+                    <a href="/" class="text-gray-400 hover:text-white">返回主页</a>
+                    <span class="text-gray-600">/</span>
+                    <span class="text-white">{{ currentProject.title }}</span>
+                </div>
+                <a v-else href="/" class="text-gray-400 hover:text-white">← 返回主页</a>
+            </div>
+        </nav>
+
+        <!-- 进度条 -->
+        <div v-if="currentProject" class="fixed top-16 left-0 right-0 z-40 px-6 py-3" style="background: rgba(22, 33, 62, 0.95);">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex justify-between text-sm mb-2">
+                    <span>创作进度</span>
+                    <span>{{ currentProject.progress }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{width: currentProject.progress + '%'}"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="pt-32 pb-12 px-6">
+            <div class="max-w-6xl mx-auto">
+                
+                <!-- 首页：项目列表 -->
+                <div v-if="$route.path === '/'">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-2xl font-bold">我的创作项目</h1>
+                        <button @click="showNewProject = true" class="btn">
+                            + 新建项目
+                        </button>
+                    </div>
+
+                    <!-- 新建项目弹窗 -->
+                    <div v-if="showNewProject" class="card p-6 mb-8">
+                        <h3 class="text-lg font-bold mb-4">创建新项目</h3>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-400 mb-2">告诉我你的想法（一句话）</label>
+                            <input v-model="newProjectIdea" class="input" placeholder="例如：我想写一个关于重生后复仇的故事...">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-400 mb-2">创作类型</label>
+                            <select v-model="newProjectType" class="input">
+                                <option value="小说">小说</option>
+                                <option value="游戏策划">游戏策划</option>
+                                <option value="剧本">剧本</option>
+                                <option value="自传">自传</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-3">
+                            <button @click="createProject" class="btn">创建项目</button>
+                            <button @click="showNewProject = false" class="btn btn-outline">取消</button>
+                        </div>
+                    </div>
+
+                    <!-- 项目列表 -->
+                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div v-for="project in projects" :key="project.id" 
+                             class="card p-5 cursor-pointer hover:border-purple-500 transition-all"
+                             @click="openProject(project)">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="font-bold text-lg">{{ project.title }}</h3>
+                                <span :class="'status-badge status-' + project.status">{{ project.status }}</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-2">{{ project.idea }}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">{{ project.project_type }}</span>
+                                <span class="text-sm text-purple-400">{{ project.progress }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="projects.length === 0" class="text-center py-20 text-gray-500">
+                        <p class="text-4xl mb-4">📖</p>
+                        <p>还没有创作项目，开始你的第一个故事吧！</p>
+                    </div>
+                </div>
+
+                <!-- 项目工作台 -->
+                <div v-else>
+                    <!-- 标签页导航 -->
+                    <!-- 调试信息 -->
+                    <div class="text-xs text-gray-500 mb-2">
+                        项目ID: {{ currentProject ? currentProject.id : '未加载' }} | 
+                        URL: {{ $route.path }}
+                    </div>
+                    <div class="flex gap-2 mb-6 mt-2">
+                        <button @click="navigateTo('idea')" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('idea') ? 'bg-purple-600' : 'bg-gray-700']">
+                            💭 构思引导
+                        </button>
+                        <button @click="navigateTo('framework')" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('framework') ? 'bg-purple-600' : 'bg-gray-700']">
+                            🎭 角色与框架
+                        </button>
+                        <button @click="navigateTo('chapters')" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('chapters') ? 'bg-purple-600' : 'bg-gray-700']">
+                            📑 章节规划
+                        </button>
+                        <button @click="navigateTo('export')" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('export') ? 'bg-purple-600' : 'bg-gray-700']">
+                            📤 导出
+                        </button>
+                    </div>
+
+                    <!-- 构思引导页面 -->
+                    <div v-if="$route.path.includes('idea')" class="card p-6">
+                        <h2 class="text-xl font-bold mb-4">💭 构思引导</h2>
+                        <p class="text-gray-400 mb-6">让我来帮你明确创作思路...</p>
+                        
+                        <!-- 对话区域 -->
+                        <div class="flex gap-6">
+                            <div class="flex-1 max-h-96 overflow-y-auto mb-4" style="max-height: 400px;">
+                                <div v-for="(msg, idx) in conversation" :key="idx"
+                                     :class="['chat-message', msg.role === 'user' ? 'chat-user' : 'chat-ai']">
+                                    <div class="text-sm mb-1">{{ msg.role === 'user' ? '你' : 'AI引导' }}</div>
+                                    <div>{{ msg.content }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 输入区域 -->
+                        <div class="flex gap-3">
+                            <input v-model="userMessage" @keyup.enter="sendMessage" 
+                                   class="input flex-1" placeholder="输入你的回答...">
+                            <button @click="sendMessage" class="btn">发送</button>
+                        </div>
+
+                        <div v-if="conversation.length > 0 && conversation[conversation.length-1].content.includes('框架')" class="mt-6">
+                            <!-- 生成中显示进度 -->
+                            <div v-if="isGenerating" class="space-y-3">
+                                <div class="bg-gray-800 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-purple-400 font-medium">{{ generatingMessage }}</span>
+                                        <span class="text-gray-400">{{ generatingProgress }}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-2">
+                                        <div class="bg-purple-500 h-2 rounded-full transition-all duration-300" 
+                                             :style="{ width: generatingProgress + '%' }"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 未生成时显示按钮 -->
+                            <button v-else @click="generateFramework" class="btn w-full">
+                                ✨ 生成故事框架
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 框架页面 -->
+                    <div v-if="$route.path.includes('framework')" class="space-y-6">
+                        <!-- 世界观 -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4">🌍 世界观</h2>
+                            <div v-if="framework">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-gray-400 text-sm">世界观</label>
+                                        <p>{{ framework.世界观 }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-400 text-sm">时代背景</label>
+                                        <p>{{ framework.时代背景 }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-400 text-sm">核心冲突</label>
+                                        <p>{{ framework.核心冲突 }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-400 text-sm">风格</label>
+                                        <p>{{ framework.风格 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-gray-500">
+                                <p>请先完成构思引导</p>
+                            </div>
+                        </div>
+
+                        <!-- 角色卡片 -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4">🎭 角色设定</h2>
+                            <div v-if="characters.length > 0" class="grid md:grid-cols-3 gap-4">
+                                <div v-for="char in characters" :key="char.id" class="role-card">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="font-bold">{{ char.name }}</h3>
+                                        <div class="flex gap-1">
+                                            <span class="text-xs bg-purple-600 px-2 py-1 rounded">{{ char.role }}</span>
+                                            <button @click.stop="startEditCharacter(char)" class="text-gray-400 hover:text-white text-sm" title="编辑">✏️</button>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-400 mb-3">{{ char.description }}</p>
+                                    <div class="text-xs space-y-1 text-gray-500">
+                                        <p v-if="char.appearance">外貌: {{ char.appearance }}</p>
+                                        <p v-if="char.personality">性格: {{ char.personality }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-gray-500 text-center py-8">
+                                暂无角色，请先生成框架
+                            </div>
+                        </div>
+
+                        <!-- 关系图 -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4">🔗 角色关系图</h2>
+                            <div class="mermaid" style="display: flex; justify-content: center;">
+                                graph LR
+                                    A[主角] --> B[配角]
+                                    A --> C[反派]
+                                    B --> C
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 章节规划页面 -->
+                    <div v-if="$route.path.includes('chapters')" class="grid md:grid-cols-3 gap-6">
+                        <!-- 章节列表 -->
+                        <div class="md:col-span-1">
+                            <h2 class="text-xl font-bold mb-4">📑 章节规划</h2>
+                            <div v-for="ch in chapters" :key="ch.id" 
+                                 :class="['chapter-card', selectedChapterId === ch.id ? 'active' : '']"
+                                 @click="selectChapter(ch)">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="font-bold">第{{ ch.order }}章</span>
+                                    <span :class="'status-badge status-' + ch.status">{{ ch.status }}</span>
+                                </div>
+                                <h3 class="text-sm mb-2">{{ ch.title }}</h3>
+                                <p class="text-xs text-gray-400">{{ ch.summary }}</p>
+                            </div>
+                        </div>
+
+                        <!-- 章节内容 -->
+                        <div class="md:col-span-2">
+                            <div v-if="selectedChapter" class="card p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-bold">第{{ selectedChapter.order }}章：{{ selectedChapter.title }}</h2>
+                                    <button v-if="!selectedChapter.content" @click="generateChapterContent" class="btn">
+                                        ✨ AI生成内容
+                                    </button>
+                                </div>
+                                <p class="text-gray-400 mb-4">{{ selectedChapter.summary }}</p>
+                                
+                                <div v-if="selectedChapter.content" class="prose prose-invert max-w-none">
+                                    <div class="whitespace-pre-wrap">{{ selectedChapter.content }}</div>
+                                </div>
+                                <div v-else class="text-center py-12 text-gray-500">
+                                    <p class="mb-4">点击"AI生成内容"开始创作</p>
+                                </div>
+                            </div>
+                            <div v-else class="card p-6 text-center text-gray-500">
+                                选择一个章节开始创作
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 方向选择弹窗 -->
+                    <div v-if="showDirectionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="card p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold">🎯 选择创作方向</h2>
+                                <button @click="showDirectionModal = false" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                            </div>
+                            <p class="text-gray-400 mb-4">互动次数: {{ interactionCount }} / 3</p>
+                            
+                            <div class="space-y-4">
+                                <div v-for="dir in directions" :key="dir.id" 
+                                     class="p-4 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 border border-gray-600 hover:border-purple-500 transition"
+                                     @click="selectDirection(dir.id)">
+                                    <h3 class="font-bold text-lg text-purple-400 mb-2">{{ dir.title }}</h3>
+                                    <p class="text-gray-300 text-sm mb-2">{{ dir.description }}</p>
+                                    <p class="text-gray-500 text-xs">风格: {{ dir.tone }}</p>
+                                </div>
+                            </div>
+                            
+                            <div v-if="isGenerating" class="text-center py-4">
+                                <p class="text-purple-400">AI 创作中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 角色编辑弹窗 -->
+                    <div v-if="showEditCharacter" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="card p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold">✏️ 编辑角色</h2>
+                                <button @click="cancelEditCharacter" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                            </div>
+                            
+                            <div v-if="editingCharacter" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">名字</label>
+                                    <input v-model="editingCharacter.name" class="input" placeholder="角色名字" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">角色类型</label>
+                                    <select v-model="editingCharacter.role" class="input">
+                                        <option value="主角">主角</option>
+                                        <option value="配角">配角</option>
+                                        <option value="反派">反派</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">角色描述</label>
+                                    <textarea v-model="editingCharacter.description" class="input" rows="2" placeholder="角色简介"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">外貌特征</label>
+                                    <input v-model="editingCharacter.appearance" class="input" placeholder="身高、发型、穿着等" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">性格特点</label>
+                                    <input v-model="editingCharacter.personality" class="input" placeholder="性格描述" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">背景故事</label>
+                                    <textarea v-model="editingCharacter.background" class="input" rows="3" placeholder="角色背景"></textarea>
+                                </div>
+                                
+                                <p class="text-yellow-400 text-sm">💡 修改后将自动同步到所有章节内容中</p>
+                                
+                                <div class="flex gap-4 mt-4">
+                                    <button @click="saveCharacter" class="btn flex-1">保存并同步</button>
+                                    <button @click="cancelEditCharacter" class="btn btn-outline flex-1">取消</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 导出页面 -->
+                    <div v-if="$route.path.includes('export')" class="card p-6">
+                        <h2 class="text-xl font-bold mb-4">📤 导出作品</h2>
+                        <div class="flex gap-4 mb-6">
+                            <button @click="exportProject('markdown')" class="btn">
+                                📄 导出为 Markdown
+                            </button>
+                            <button @click="exportProject('json')" class="btn btn-outline">
+                                🎮 导出为 JSON (游戏数据)
+                            </button>
+                        </div>
+                        <div v-if="exportContent" class="mt-6">
+                            <textarea class="input w-full h-64 font-mono text-sm" 
+                                      v-model="exportContent" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局错误处理
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('JavaScript 错误:', msg, '行号:', line);
+            return false;
+        };
+        
+        // Vue 错误处理
+        const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+        const { createRouter, createWebHistory, useRoute } = VueRouter;
+
+        // API基础URL
+        const API_BASE = '/story_api';
+
+        // 数据存储（Vue组件外部）
+        const store = {
+            projects: ref([]),
+            currentProject: ref(null),
+            conversation: ref([]),
+            framework: ref(null),
+            characters: ref([]),
+            chapters: ref([]),
+            selectedChapterId: ref(null),
+            selectedChapter: ref(null),
+            exportContent: ref(''),
+            showNewProject: ref(false),
+            newProjectIdea: ref(''),
+            newProjectType: ref('小说'),
+            userMessage: ref(''),
+            // 方向选择相关状态
+            showDirectionModal: ref(false),
+            directions: ref([]),
+            isGenerating: ref(false),
+            interactionCount: ref(0),
+            // 角色编辑状态
+            showEditCharacter: ref(false),
+            editingCharacter: ref(null),
+            // 框架生成进度
+            generatingProgress: ref(0),
+            generatingMessage: ref('')
+        };
+
+        // 路由 - 注意：这是相对于 index.html 的路径，不包含 /story_creator 前缀
+        const routes = [
+            { path: '/', component: { template: '<div></div>' } },
+            { path: '/project/:id/idea', component: { template: '<div></div>' } },
+            { path: '/project/:id/framework', component: { template: '<div></div>' } },
+            { path: '/project/:id/chapters', component: { template: '<div></div>' } },
+            { path: '/project/:id/export', component: { template: '<div></div>' } }
+        ];
+
+        const router = createRouter({
+            // 重要：base 路径需要与部署路径一致
+            history: createWebHistory('/story_creator'),
+            routes
+        });
+
+        // 获取项目ID的辅助函数
+        const getProjectId = () => {
+            const path = window.location.pathname;
+            const match = path.match(/\/project\/([^/]+)/);
+            return match ? match[1] : null;
+        };
+
+        // API调用函数
+        const api = {
+            async loadProjects() {
+                const res = await axios.get(API_BASE + '/projects');
+                store.projects.value = res.data;
+            },
+
+            async createProject(idea, projectType) {
+                const res = await axios.post(API_BASE + '/projects', {
+                    idea: idea,
+                    project_type: projectType
+                });
+                store.projects.value.push(res.data);
+                return res.data;
+            },
+
+            async loadProject(id) {
+                const res = await axios.get(API_BASE + '/projects/' + id);
+                store.currentProject.value = res.data;
+                return res.data;
+            },
+
+            async loadCharacters(projectId) {
+                const res = await axios.get(API_BASE + '/projects/' + projectId + '/characters');
+                store.characters.value = res.data;
+            },
+
+            async loadChapters(projectId) {
+                const res = await axios.get(API_BASE + '/projects/' + projectId + '/chapters');
+                store.chapters.value = res.data;
+            },
+
+            async loadConversation(projectId) {
+                const res = await axios.get(API_BASE + '/projects/' + projectId + '/idea/conversation');
+                store.conversation.value = res.data.messages || [];
+            },
+
+            async sendMessage(projectId, content) {
+                const res = await axios.post(API_BASE + '/projects/' + projectId + '/idea/message', {
+                    content: content
+                });
+                store.conversation.value = res.data.messages;
+            },
+
+            async generateFramework(projectId) {
+                store.isGenerating.value = true;
+                store.generatingMessage.value = '📜 准备工作纸笔...';
+                store.generatingProgress.value = 0;
+                
+                // 使用 SSE 流式 API
+                const eventSource = new EventSource(API_BASE + '/projects/' + projectId + '/framework/generate/stream');
+                
+                eventSource.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        if (data.progress !== undefined) {
+                            store.generatingProgress.value = parseInt(data.progress) || 0;
+                        }
+                        if (data.message) {
+                            store.generatingMessage.value = data.message;
+                        }
+                        
+                        if (data.status === 'complete') {
+                            store.framework.value = data.framework;
+                            store.characters.value = data.characters;
+                            store.chapters.value = data.chapters;
+                            store.isGenerating.value = false;
+                            store.generatingMessage.value = data.message || '✨ 完成！';
+                            eventSource.close();
+                            // 跳转到框架页面
+                            router.push('/project/' + projectId + '/framework');
+                        }
+                        
+                        if (data.error) {
+                            store.isGenerating.value = false;
+                            store.generatingMessage.value = '生成失败: ' + data.error;
+                            eventSource.close();
+                        }
+                    } catch (e) {
+                        console.error('解析进度失败:', e);
+                    }
+                };
+                
+                eventSource.onerror = () => {
+                    store.isGenerating.value = false;
+                    store.generatingMessage.value = '连接中断，请重试';
+                    eventSource.close();
+                };
+                
+                return new Promise((resolve) => {
+                    eventSource.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (data.status === 'complete') {
+                                resolve(data);
+                            }
+                        } catch (e) {}
+                    };
+                });
+            },
+
+            // 获取章节创作方向建议
+            async getChapterDirections(chapterId) {
+                const res = await axios.post(API_BASE + '/chapters/' + chapterId + '/directions');
+                store.directions.value = res.data.directions;
+                store.interactionCount.value = res.data.interaction_count;
+                return res.data;
+            },
+
+            // 生成章节内容（带方向选择）
+            async generateChapterContent(chapterId, directionId) {
+                const res = await axios.post(API_BASE + '/chapters/' + chapterId + '/generate', {
+                    direction_id: directionId
+                });
+                store.selectedChapter.value = res.data.chapter;
+                store.interactionCount.value = res.data.interaction_count;
+                store.showDirectionModal.value = false;
+                return res.data;
+            },
+
+            async generateChapter(chapterId) {
+                const res = await axios.post(API_BASE + '/chapters/' + chapterId + '/generate');
+                return res.data;
+            },
+
+            async exportProject(projectId, format) {
+                const res = await axios.get(API_BASE + '/projects/' + projectId + '/export?format=' + format);
+                store.exportContent.value = res.data.content;
+            },
+
+            // 更新角色信息
+            async updateCharacter(charId, data) {
+                const res = await axios.patch(API_BASE + '/characters/' + charId, data);
+                // API 返回 {character, sync}，需要取 character 字段
+                const updatedChar = res.data.character || res.data;
+                // 更新本地角色列表
+                const idx = store.characters.value.findIndex(c => c.id === charId);
+                if (idx >= 0) {
+                    store.characters.value[idx] = updatedChar;
+                }
+                return res.data;
+            },
+
+            // 更新框架信息
+            async updateFramework(projectId, framework) {
+                const res = await axios.patch(API_BASE + '/projects/' + projectId, {
+                    framework: framework
+                });
+                store.framework.value = res.data.framework;
+                return res.data;
+            }
+        };
+
+        // 导航函数
+        const navigateTo = (page) => {
+            const id = getProjectId();
+            console.log('navigateTo:', page, 'projectId:', id);
+            if (id) {
+                router.push('/project/' + id + '/' + page);
+            } else {
+                console.error('无法获取项目ID，当前URL:', window.location.pathname);
+                alert('无法获取项目信息，请刷新页面重试');
+            }
+        };
+
+        // 创建Vue应用
+        const app = createApp({
+            router,
+            setup() {
+                // 使用route获取当前路由信息
+                const route = useRoute();
+
+                // 计算属性
+                const currentProjectId = computed(() => route.params.id);
+
+                // 方法 - 使用store中的数据和函数
+                const createProject = async () => {
+                    if (!store.newProjectIdea.value.trim()) return;
+                    try {
+                        const project = await api.createProject(
+                            store.newProjectIdea.value,
+                            store.newProjectType.value
+                        );
+                        store.showNewProject.value = false;
+                        store.newProjectIdea.value = '';
+                        router.push('/project/' + project.id + '/idea');
+                    } catch (e) {
+                        console.error('创建项目失败', e);
+                        alert('创建项目失败: ' + e.message);
+                    }
+                };
+
+                const openProject = (project) => {
+                    router.push('/project/' + project.id + '/idea');
+                };
+
+                const sendMessage = async () => {
+                    if (!store.userMessage.value.trim()) return;
+                    const projectId = getProjectId();
+                    if (!projectId) {
+                        console.error('无法获取项目ID');
+                        return;
+                    }
+                    try {
+                        await api.sendMessage(projectId, store.userMessage.value);
+                        store.userMessage.value = '';
+                        // 刷新项目数据
+                        await api.loadProject(projectId);
+                    } catch (e) {
+                        console.error('发送消息失败', e);
+                        alert('发送消息失败: ' + e.message);
+                    }
+                };
+
+                const generateFramework = async () => {
+                    const projectId = getProjectId();
+                    if (!projectId) {
+                        console.error('无法获取项目ID');
+                        return;
+                    }
+                    try {
+                        await api.generateFramework(projectId);
+                        await api.loadProject(projectId);
+                        router.push('/project/' + projectId + '/framework');
+                    } catch (e) {
+                        console.error('生成框架失败', e);
+                        alert('生成框架失败: ' + e.message);
+                    }
+                };
+
+                const selectChapter = (ch) => {
+                    store.selectedChapterId.value = ch.id;
+                    store.selectedChapter.value = ch;
+                };
+
+                // 获取方向建议并显示弹窗
+                const generateChapterContent = async () => {
+                    const chapterId = store.selectedChapterId.value;
+                    if (!chapterId) return;
+                    try {
+                        store.isGenerating.value = true;
+                        // 先获取方向建议
+                        await api.getChapterDirections(chapterId);
+                        store.showDirectionModal.value = true;
+                    } catch (e) {
+                        console.error('获取方向建议失败', e);
+                        alert('获取方向建议失败: ' + e.message);
+                    } finally {
+                        store.isGenerating.value = false;
+                    }
+                };
+
+                // 选择方向后生成内容
+                const selectDirection = async (directionId) => {
+                    const chapterId = store.selectedChapterId.value;
+                    if (!chapterId || !directionId) return;
+                    try {
+                        store.isGenerating.value = true;
+                        const result = await api.generateChapterContent(chapterId, directionId);
+                        // 刷新章节列表
+                        const projectId = getProjectId();
+                        if (projectId) {
+                            await api.loadChapters(projectId);
+                        }
+                        // 检查是否还能继续
+                        if (!result.can_continue) {
+                            alert('恭喜！本章创作完成（已进行3轮互动）！');
+                        }
+                    } catch (e) {
+                        console.error('生成内容失败', e);
+                        alert('生成内容失败: ' + e.message);
+                    } finally {
+                        store.isGenerating.value = false;
+                    }
+                };
+
+                // 编辑角色
+                const startEditCharacter = (char) => {
+                    store.editingCharacter.value = { ...char };
+                    store.showEditCharacter.value = true;
+                };
+
+                const saveCharacter = async () => {
+                    const char = store.editingCharacter.value;
+                    console.log('saveCharacter 开始, char:', char);
+                    if (!char) return;
+                    
+                    const closeModal = () => {
+                        store.showEditCharacter.value = false;
+                        store.editingCharacter.value = null;
+                        console.log('弹窗已关闭');
+                    };
+                    
+                    try {
+                        const result = await api.updateCharacter(char.id, {
+                            name: char.name,
+                            role: char.role,
+                            description: char.description,
+                            appearance: char.appearance,
+                            personality: char.personality,
+                            background: char.background
+                        });
+                        console.log('API返回:', result);
+                        
+                        // 先关闭弹窗（重要：必须在 alert 之前）
+                        closeModal();
+                        
+                        // 再显示消息
+                        const syncStatus = result.sync?.method === 'llm' ? 'LLM智能同步' : '简单替换';
+                        alert('角色已更新！同步方式: ' + syncStatus);
+                        
+                        // 刷新章节
+                        const projectId = getProjectId();
+                        if (projectId) {
+                            await api.loadChapters(projectId);
+                        }
+                    } catch (e) {
+                        console.error('更新角色失败', e);
+                        closeModal();
+                        alert('更新失败: ' + (e.message || '未知错误'));
+                    }
+                };
+
+                const cancelEditCharacter = () => {
+                    store.showEditCharacter.value = false;
+                    store.editingCharacter.value = null;
+                };
+
+                const exportProject = async (format) => {
+                    const projectId = getProjectId();
+                    if (!projectId) {
+                        console.error('无法获取项目ID');
+                        return;
+                    }
+                    try {
+                        await api.exportProject(projectId, format);
+                    } catch (e) {
+                        console.error('导出失败', e);
+                        alert('导出失败: ' + e.message);
+                    }
+                };
+
+                return {
+                    // route
+                    $route: route,
+                    // store
+                    projects: store.projects,
+                    currentProject: store.currentProject,
+                    conversation: store.conversation,
+                    framework: store.framework,
+                    characters: store.characters,
+                    chapters: store.chapters,
+                    selectedChapterId: store.selectedChapterId,
+                    selectedChapter: store.selectedChapter,
+                    exportContent: store.exportContent,
+                    showNewProject: store.showNewProject,
+                    newProjectIdea: store.newProjectIdea,
+                    newProjectType: store.newProjectType,
+                    userMessage: store.userMessage,
+                    // 方向选择相关
+                    showDirectionModal: store.showDirectionModal,
+                    directions: store.directions,
+                    isGenerating: store.isGenerating,
+                    generatingProgress: store.generatingProgress,
+                    generatingMessage: store.generatingMessage,
+                    interactionCount: store.interactionCount,
+                    // 角色编辑相关
+                    showEditCharacter: store.showEditCharacter,
+                    editingCharacter: store.editingCharacter,
+                    // methods
+                    createProject,
+                    openProject,
+                    sendMessage,
+                    generateFramework,
+                    selectChapter,
+                    generateChapterContent,
+                    selectDirection,
+                    startEditCharacter,
+                    saveCharacter,
+                    cancelEditCharacter,
+                    exportProject,
+                    navigateTo
+                };
+            }
+        });
+
+        app.use(router);
+        app.mount('#app');
+
+        // 路由变化时加载数据
+        router.afterEach(async (to) => {
+            const projectId = to.params.id;
+            if (!projectId) return;
+
+            try {
+                // 加载项目基本信息
+                const project = await api.loadProject(projectId);
+                
+                // 确保项目在列表中
+                if (!store.projects.value.find(p => p.id === projectId)) {
+                    store.projects.value.push(project);
+                }
+
+                // 根据页面加载对应数据
+                if (to.path.includes('idea')) {
+                    await api.loadConversation(projectId);
+                }
+                
+                if (to.path.includes('framework')) {
+                    await api.loadCharacters(projectId);
+                }
+                
+                if (to.path.includes('chapters')) {
+                    await api.loadChapters(projectId);
+                }
+            } catch (e) {
+                console.error('加载项目数据失败', e);
+            }
+        });
+
+        // 初始化
+        async function init() {
+            console.log('初始化 story_creator...');
+            try {
+                await api.loadProjects();
+                console.log('项目列表加载完成, 数量:', store.projects.value.length);
+            } catch (e) {
+                console.error('初始化失败', e);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

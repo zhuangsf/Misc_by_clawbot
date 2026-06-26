@@ -85,6 +85,14 @@ class BacktestEngine:
         self.trades = []
         self.equity_curve = []
         
+        # 标准化时间格式 (处理 2026-03-06T12:30:00 -> 2026-03-06 12:30:00)
+        for k in kline_data:
+            if 'T' in str(k.get('kline_time', '')):
+                k['kline_time'] = str(k['kline_time']).replace('T', ' ')
+        for s in volume_spikes:
+            if 'T' in str(s.get('kline_time', '')):
+                s['kline_time'] = str(s['kline_time']).replace('T', ' ')
+        
         # 创建K线数据字典 {时间: 数据}
         kline_dict = {k['kline_time']: k for k in kline_data}
         
@@ -294,7 +302,30 @@ class BacktestEngine:
 def load_kline_data(log_file: str) -> List[Dict]:
     """从日志文件加载K线数据"""
     data = []
-    if not log_file or not log_file.endswith('.log'):
+    if not log_file:
+        return data
+    
+    # 支持JSON格式
+    if log_file.endswith('.json'):
+        try:
+            with open(log_file, 'r', encoding='utf-8') as f:
+                klines = json.load(f)
+            for k in klines:
+                data.append({
+                    'kline_time': k.get('kline_time', ''),
+                    'open': float(k.get('open', 0)),
+                    'close': float(k.get('close', 0)),
+                    'high': float(k.get('high', 0)),
+                    'low': float(k.get('low', 0)),
+                    'volume': float(k.get('volume', 0))
+                })
+            logger.info(f"从JSON加载 {len(data)} 条K线数据")
+            return data
+        except Exception as e:
+            logger.error(f"加载JSON K线数据失败: {e}")
+            return []
+    
+    if not log_file.endswith('.log'):
         return data
     
     try:

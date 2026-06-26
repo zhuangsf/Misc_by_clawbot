@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>故事创作引擎</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4/dist/vue-router.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: white;
+            width: 100%;
+        }
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #f093fb 100%);
+            transition: width 0.5s ease;
+        }
+        .chat-message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .chat-user {
+            background: rgba(102, 126, 234, 0.3);
+            margin-left: auto;
+        }
+        .chat-ai {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .chapter-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .chapter-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+        .chapter-card.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .role-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .status-构思中 { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .status-框架生成中 { background: rgba(0, 188, 212, 0.2); color: #00bcd4; }
+        .status-框架已生成 { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        .status-创作中 { background: rgba(156, 39, 176, 0.2); color: #9c27b0; }
+        .status-已完成 { background: rgba(33, 150, 243, 0.2); color: #2196f3; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航 -->
+        <nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4" style="background: rgba(26, 26, 46, 0.9); backdrop-filter: blur(10px);">
+            <div class="max-w-6xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📝</span>
+                    <span class="text-xl font-bold">故事创作引擎</span>
+                </div>
+                <div v-if="currentProject" class="flex items-center gap-4">
+                    <a href="/" class="text-gray-400 hover:text-white">返回主页</a>
+                    <span class="text-gray-600">/</span>
+                    <span class="text-white">{{ currentProject.title }}</span>
+                </div>
+                <a v-else href="/" class="text-gray-400 hover:text-white">← 返回主页</a>
+            </div>
+        </nav>
+
+        <!-- 进度条 -->
+        <div v-if="currentProject" class="fixed top-16 left-0 right-0 z-40 px-6 py-3" style="background: rgba(22, 33, 62, 0.95);">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex justify-between text-sm mb-2">
+                    <span>创作进度</span>
+                    <span>{{ currentProject.progress }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" :style="{width: currentProject.progress + '%'}"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="pt-24 pb-12 px-6">
+            <div class="max-w-6xl mx-auto">
+                
+                <!-- 首页：项目列表 -->
+                <div v-if="$route.path === '/'">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-2xl font-bold">我的创作项目</h1>
+                        <button @click="showNewProject = true" class="btn">
+                            + 新建项目
+                        </button>
+                    </div>
+
+                    <!-- 新建项目弹窗 -->
+                    <div v-if="showNewProject" class="card p-6 mb-8">
+                        <h3 class="text-lg font-bold mb-4">创建新项目</h3>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-400 mb-2">告诉我你的想法（一句话）</label>
+                            <input v-model="newProjectIdea" class="input" placeholder="例如：我想写一个关于重生后复仇的故事...">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-400 mb-2">创作类型</label>
+                            <select v-model="newProjectType" class="input">
+                                <option value="小说">小说</option>
+                                <option value="游戏策划">游戏策划</option>
+                                <option value="剧本">剧本</option>
+                                <option value="自传">自传</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-3">
+                            <button @click="createProject" class="btn">创建项目</button>
+                            <button @click="showNewProject = false" class="btn btn-outline">取消</button>
+                        </div>
+                    </div>
+
+                    <!-- 项目列表 -->
+                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div v-for="project in projects" :key="project.id" 
+                             class="card p-5 cursor-pointer hover:border-purple-500 transition-all"
+                             @click="openProject(project)">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="font-bold text-lg">{{ project.title }}</h3>
+                                <span :class="'status-badge status-' + project.status">{{ project.status }}</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-2">{{ project.idea }}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">{{ project.project_type }}</span>
+                                <span class="text-sm text-purple-400">{{ project.progress }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="projects.length === 0" class="text-center py-20 text-gray-500">
+                        <p class="text-4xl mb-4">📖</p>
+                        <p>还没有创作项目，开始你的第一个故事吧！</p>
+                    </div>
+                </div>
+
+                <!-- 项目工作台 -->
+                <div v-else>
+                    <!-- 标签页导航 - 使用计算属性获取项目ID -->
+                    <div class="flex gap-2 mb-6">
+                        <button @click="goToIdea" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('idea') ? 'bg-purple-600' : 'bg-gray-700']">
+                            💭 构思引导
+                        </button>
+                        <button @click="goToFramework" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('framework') ? 'bg-purple-600' : 'bg-gray-700']">
+                            🎭 角色与框架
+                        </button>
+                        <button @click="goToChapters" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('chapters') ? 'bg-purple-600' : 'bg-gray-700']">
+                            📑 章节规划
+                        </button>
+                        <button @click="goToExport" 
+                                :class="['px-4 py-2 rounded-lg', $route.path.includes('export') ? 'bg-purple-600' : 'bg-gray-700']">
+                            📤 导出
+                        </button>
+                    </div>
+
+                    <!-- 构思引导页面 -->
+                    <div v-if="$route.path.includes('idea')" class="card p-6">
+                        <h2 class="text-xl font-bold mb-4">💭 构思引导</h2>
+                        <p class="text-gray-400 mb-6">让我来帮你明确创作思路...</p>
+                        
+                        <!-- 对话区域 -->
+                        <div class="flex gap-6">
+                            <div class="flex-1 max-h-96 overflow-y-auto mb-4" style="max-height: 400px;">
+                                <div v-for="(msg, idx) in conversation" :key="idx"
+                                     :class="['chat-message', msg.role === 'user' ? 'chat-user' : 'chat-ai']">
+                                    <div class="text-sm mb-1">{{ msg.role === 'user' ? '你' : 'AI引导' }}</div>
+                                    <div>{{ msg.content }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 输入区域 -->
+                        <div class="flex gap-3">
+                            <input v-model="userMessage" @keyup.enter="sendMessage" 
+                                   class="input flex-1" placeholder="输入你的回答...">
+                            <button @click="sendMessage" class="btn">发送</button>
+                        </div>
+
+                        <div v-if="conversation.length > 0 && conversation[conversation.length-1].content.includes('框架')" class="mt-6">
+                            <button @click="generateFramework" class="btn w-full">
+                                ✨ 生成故事框架
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 框架页面 -->
+                    <div v-if="$route.path.includes('framework')" class="space-y-6">
+                        <!-- 世界观 -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4">🌍 世界观</h2>
+                            <div v-if="framework">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-gray-400 text-sm">世界观</label>
+                                        <p>{{ framework.世界观 }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-400 text-sm">时代背景</label>
+                                        <p>{{ framework.时代背景 }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-400 text-sm">核心冲突</label>
+                                        <p>{{ framework.核心冲突 }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-400 text-sm">风格</label>
+                                        <p>{{ framework.风格 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-gray-500">
+                                <p>请先完成构思引导</p>
+                            </div>
+                        </div>
+
+                        <!-- 角色卡片 -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4">🎭 角色设定</h2>
+                            <div v-if="characters.length > 0" class="grid md:grid-cols-3 gap-4">
+                                <div v-for="char in characters" :key="char.id" class="role-card">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="font-bold">{{ char.name }}</h3>
+                                        <span class="text-xs bg-purple-600 px-2 py-1 rounded">{{ char.role }}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-400 mb-3">{{ char.description }}</p>
+                                    <div class="text-xs space-y-1 text-gray-500">
+                                        <p v-if="char.appearance">外貌: {{ char.appearance }}</p>
+                                        <p v-if="char.personality">性格: {{ char.personality }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-gray-500 text-center py-8">
+                                暂无角色，请先生成框架
+                            </div>
+                        </div>
+
+                        <!-- 关系图 -->
+                        <div class="card p-6">
+                            <h2 class="text-xl font-bold mb-4">🔗 角色关系图</h2>
+                            <div class="mermaid" style="display: flex; justify-content: center;">
+                                graph LR
+                                    A[主角] --> B[配角]
+                                    A --> C[反派]
+                                    B --> C
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 章节规划页面 -->
+                    <div v-if="$route.path.includes('chapters')" class="grid md:grid-cols-3 gap-6">
+                        <!-- 章节列表 -->
+                        <div class="md:col-span-1">
+                            <h2 class="text-xl font-bold mb-4">📑 章节规划</h2>
+                            <div v-for="ch in chapters" :key="ch.id" 
+                                 :class="['chapter-card', selectedChapterId === ch.id ? 'active' : '']"
+                                 @click="selectChapter(ch)">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="font-bold">第{{ ch.order }}章</span>
+                                    <span :class="'status-badge status-' + ch.status">{{ ch.status }}</span>
+                                </div>
+                                <h3 class="text-sm mb-2">{{ ch.title }}</h3>
+                                <p class="text-xs text-gray-400">{{ ch.summary }}</p>
+                            </div>
+                        </div>
+
+                        <!-- 章节内容 -->
+                        <div class="md:col-span-2">
+                            <div v-if="selectedChapter" class="card p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-bold">第{{ selectedChapter.order }}章：{{ selectedChapter.title }}</h2>
+                                    <button v-if="!selectedChapter.content" @click="generateChapterContent" class="btn">
+                                        ✨ AI生成内容
+                                    </button>
+                                </div>
+                                <p class="text-gray-400 mb-4">{{ selectedChapter.summary }}</p>
+                                
+                                <div v-if="selectedChapter.content" class="prose prose-invert max-w-none">
+                                    <div class="whitespace-pre-wrap">{{ selectedChapter.content }}</div>
+                                </div>
+                                <div v-else class="text-center py-12 text-gray-500">
+                                    <p class="mb-4">点击"AI生成内容"开始创作</p>
+                                </div>
+                            </div>
+                            <div v-else class="card p-6 text-center text-gray-500">
+                                选择一个章节开始创作
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 导出页面 -->
+                    <div v-if="$route.path.includes('export')" class="card p-6">
+                        <h2 class="text-xl font-bold mb-4">📤 导出作品</h2>
+                        <div class="flex gap-4 mb-6">
+                            <button @click="exportProject('markdown')" class="btn">
+                                📄 导出为 Markdown
+                            </button>
+                            <button @click="exportProject('json')" class="btn btn-outline">
+                                🎮 导出为 JSON (游戏数据)
+                            </button>
+                        </div>
+                        <div v-if="exportContent" class="mt-6">
+                            <textarea class="input w-full h-64 font-mono text-sm" 
+                                      v-model="exportContent" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+        const { createRouter, createWebHistory } = VueRouter;
+
+        // API基础URL
+        const API_BASE = '/story_api';
+
+        const app = createApp({
+            setup() {
+                // 状态
+                const projects = ref([]);
+                const currentProjectId = ref(null);
+                const currentProject = ref(null);
+                const showNewProject = ref(false);
+                const newProjectIdea = ref('');
+                const newProjectType = ref('小说');
+                
+                // 构思引导
+                const conversation = ref([]);
+                const userMessage = ref('');
+                
+                // 框架数据
+                const framework = ref(null);
+                const characters = ref([]);
+                const chapters = ref([]);
+                const selectedChapterId = ref(null);
+                const selectedChapter = ref(null);
+                
+                // 导出
+                const exportContent = ref('');
+
+                // 计算属性
+                const currentProjectData = computed(() => {
+                    return projects.value.find(p => p.id === currentProjectId.value);
+                });
+
+                // 方法
+                const loadProjects = async () => {
+                    try {
+                        const res = await axios.get(API_BASE + '/projects');
+                        projects.value = res.data;
+                    } catch (e) {
+                        console.error('加载项目失败', e);
+                    }
+                };
+
+                const createProject = async () => {
+                    if (!newProjectIdea.value.trim()) return;
+                    try {
+                        const res = await axios.post(API_BASE + '/projects', {
+                            idea: newProjectIdea.value,
+                            project_type: newProjectType.value
+                        });
+                        projects.value.push(res.data);
+                        currentProjectId.value = res.data.id;
+                        currentProject.value = res.data;
+                        showNewProject.value = false;
+                        newProjectIdea.value = '';
+                        
+                        // 跳转到构思引导页面
+                        router.push('/project/' + res.data.id + '/idea');
+                    } catch (e) {
+                        console.error('创建项目失败', e);
+                    }
+                };
+
+                const openProject = (project) => {
+                    currentProjectId.value = project.id;
+                    currentProject.value = project;
+                    router.push('/project/' + project.id + '/idea');
+                };
+
+                const loadProjectData = async (projectId) => {
+                    try {
+                        const res = await axios.get(API_BASE + '/projects/' + projectId);
+                        currentProject.value = res.data;
+                        currentProjectId.value = projectId;
+                        
+                        // 加载角色
+                        const charRes = await axios.get(API_BASE + '/projects/' + projectId + '/characters');
+                        characters.value = charRes.data;
+                        
+                        // 加载章节
+                        const chRes = await axios.get(API_BASE + '/projects/' + projectId + '/chapters');
+                        chapters.value = chRes.data;
+                        
+                        // 加载框架
+                        if (res.data.framework && Object.keys(res.data.framework).length > 0) {
+                            framework.value = res.data.framework;
+                        }
+                    } catch (e) {
+                        console.error('加载项目数据失败', e);
+                    }
+                };
+
+                const sendMessage = async () => {
+                    if (!userMessage.value.trim()) return;
+                    
+                    // 从URL获取projectId，而不是依赖变量
+                    const pathMatch = window.location.pathname.match(/\/project\/([^/]+)/);
+                    const projectId = pathMatch ? pathMatch[1] : currentProjectId.value;
+                    
+                    if (!projectId) {
+                        console.error('无法获取项目ID');
+                        return;
+                    }
+                    
+                    try {
+                        const res = await axios.post(API_BASE + '/projects/' + projectId + '/idea/message', {
+                            content: userMessage.value
+                        });
+                        conversation.value = res.data.messages;
+                        userMessage.value = '';
+                        
+                        // 更新项目数据
+                        await loadProjectData(projectId);
+                    } catch (e) {
+                        console.error('发送消息失败', e);
+                    }
+                };
+
+                const generateFramework = async () => {
+                    // 从URL获取projectId
+                    const pathMatch = window.location.pathname.match(/\/project\/([^/]+)/);
+                    const projectId = pathMatch ? pathMatch[1] : currentProjectId.value;
+                    
+                    if (!projectId) {
+                        console.error('无法获取项目ID');
+                        return;
+                    }
+                    
+                    try {
+                        const res = await axios.post(API_BASE + '/projects/' + projectId + '/framework/generate');
+                        framework.value = res.data.framework;
+                        characters.value = res.data.characters;
+                        chapters.value = res.data.chapters;
+                        
+                        // 更新项目标题
+                        currentProject.value.status = '框架已生成';
+                        currentProject.value.progress = 50;
+                        
+                        // 跳转到框架页面
+                        router.push('/project/' + projectId + '/framework');
+                    } catch (e) {
+                        console.error('生成框架失败', e);
+                    }
+                };
+
+                const selectChapter = (ch) => {
+                    selectedChapterId.value = ch.id;
+                    selectedChapter.value = ch;
+                };
+
+                const generateChapterContent = async () => {
+                    if (!selectedChapterId.value) return;
+                    
+                    try {
+                        const res = await axios.post(API_BASE + '/chapters/' + selectedChapterId.value + '/generate');
+                        selectedChapter.value = res.data;
+                        
+                        // 刷新章节列表
+                        const chRes = await axios.get(API_BASE + '/projects/' + currentProjectId.value + '/chapters');
+                        chapters.value = chRes.data;
+                        
+                        // 更新项目进度
+                        await loadProjectData(currentProjectId.value);
+                    } catch (e) {
+                        console.error('生成章节内容失败', e);
+                    }
+                };
+
+                const exportProject = async (format) => {
+                    // 从URL获取projectId
+                    const pathMatch = window.location.pathname.match(/\/project\/([^/]+)/);
+                    const projectId = pathMatch ? pathMatch[1] : currentProjectId.value;
+                    
+                    if (!projectId) {
+                        console.error('无法获取项目ID');
+                        return;
+                    }
+                    
+                    try {
+                        const res = await axios.get(API_BASE + '/projects/' + projectId + '/export?format=' + format);
+                        exportContent.value = res.data.content;
+                    } catch (e) {
+                        console.error('导出失败', e);
+                    }
+                };
+                
+                // 导航函数 - 从URL获取项目ID
+                const getProjectIdFromUrl = () => {
+                    const pathMatch = window.location.pathname.match(/\/project\/([^/]+)/);
+                    return pathMatch ? pathMatch[1] : null;
+                };
+                
+                const goToIdea = () => {
+                    const id = getProjectIdFromUrl();
+                    if (id) router.push('/project/' + id + '/idea');
+                };
+                
+                const goToFramework = () => {
+                    const id = getProjectIdFromUrl();
+                    if (id) router.push('/project/' + id + '/framework');
+                };
+                
+                const goToChapters = () => {
+                    const id = getProjectIdFromUrl();
+                    if (id) router.push('/project/' + id + '/chapters');
+                };
+                
+                const goToExport = () => {
+                    const id = getProjectIdFromUrl();
+                    if (id) router.push('/project/' + id + '/export');
+                };
+
+                return {
+                    projects, currentProjectId, currentProject, showNewProject,
+                    newProjectIdea, newProjectType, createProject, openProject,
+                    conversation, userMessage, sendMessage, generateFramework,
+                    framework, characters, chapters, selectedChapterId, selectedChapter,
+                    selectChapter, generateChapterContent, exportProject, exportContent,
+                    goToIdea, goToFramework, goToChapters, goToExport
+                };
+            }
+        });
+
+        // 路由
+        const routes = [
+            { path: '/', component: { template: '<div></div>' } },
+            { path: '/project/:id/idea', component: { template: '<div></div>' } },
+            { path: '/project/:id/framework', component: { template: '<div></div>' } },
+            { path: '/project/:id/chapters', component: { template: '<div></div>' } },
+            { path: '/project/:id/export', component: { template: '<div></div>' } }
+        ];
+
+        const router = createRouter({
+            history: createWebHistory(),
+            routes
+        });
+
+        app.use(router);
+        app.mount('#app');
+
+        // 初始化
+        async function init() {
+            try {
+                const res = await axios.get(API_BASE + '/projects');
+                app.config.globalProperties.projects = res.data;
+                
+                // 监听路由变化
+                router.afterEach(async (to) => {
+                    const match = to.path.match(/\/project\/([^/]+)/);
+                    if (match) {
+                        const projectId = match[1];
+                        
+                        // 关键修复：同步更新ref变量
+                        if (currentProjectId) {
+                            currentProjectId.value = projectId;
+                        }
+                        
+                        const projectRes = await axios.get(API_BASE + '/projects/' + projectId);
+                        app.config.globalProperties.currentProjectId = projectId;
+                        app.config.globalProperties.currentProject = projectRes.data;
+                        
+                        if (to.path.includes('idea')) {
+                            // 加载对话
+                            const convRes = await axios.get(API_BASE + '/projects/' + projectId + '/idea/conversation');
+                            app.config.globalProperties.conversation = convRes.data.messages || [];
+                        }
+                        
+                        if (to.path.includes('framework')) {
+                            // 加载角色
+                            const charRes = await axios.get(API_BASE + '/projects/' + projectId + '/characters');
+                            app.config.globalProperties.characters = charRes.data;
+                            
+                            if (projectRes.data.framework) {
+                                app.config.globalProperties.framework = projectRes.data.framework;
+                            }
+                        }
+                        
+                        if (to.path.includes('chapters')) {
+                            // 加载章节
+                            const chRes = await axios.get(API_BASE + '/projects/' + projectId + '/chapters');
+                            app.config.globalProperties.chapters = chRes.data;
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('初始化失败', e);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

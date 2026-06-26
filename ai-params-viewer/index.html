@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🦞 AI参数查看器 v0.3.1</title>
+    <title>🦞 AI参数查看器 v0.4.1</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -324,13 +324,188 @@
             align-items: center;
             gap: 5px;
         }
+        
+        /* 编辑功能样式 */
+        .edit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            float: right;
+        }
+        
+        .edit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .edit-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .edit-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .edit-toolbar-left {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .preview-btn, .cancel-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .preview-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+        }
+        
+        .preview-btn:hover {
+            background: #218838;
+        }
+        
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+        }
+        
+        .cancel-btn:hover {
+            background: #5a6268;
+        }
+        
+        .editor-textarea {
+            width: 100%;
+            min-height: 500px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+        
+        .editor-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+        
+        .save-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .save-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            padding-top: 10px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            background: white;
+            padding: 30px 50px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .toast-success {
+            background: #28a745;
+        }
+        
+        .toast-error {
+            background: #dc3545;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <a href="/" class="back-btn">🏠 返回首页</a>
-            <h1><span class="lobster-emoji">🦞</span> AI参数查看器 v0.3.0</h1>
+            <h1><span class="lobster-emoji">🦞</span> AI参数查看器 v0.4.1</h1>
             <div class="subtitle">查看小龙虾的配置文件与记忆 · 优化布局 · 支持大量记忆文件</div>
         </header>
         
@@ -376,8 +551,12 @@
 
         // 状态管理
         let currentFile = null;
+        let currentFileObj = null;  // 保存完整的文件对象
         let memoryFiles = [];
         let allFilesList = [];
+        let isEditMode = false;
+        let currentContent = '';  // 保存当前文件内容（编辑用）
+        let currentFilePath = '';  // 保存当前文件路径
         
         // 获取记忆文件列表
         async function getMemoryFiles() {
@@ -571,7 +750,8 @@
         
         // 加载文件内容
         async function loadFile(file) {
-            if (currentFile === file.id) return;
+            // 如果不是编辑模式且文件相同，则跳过
+            if (!isEditMode && currentFile === file.id) return;
             
             // 更新标签状态（如果是配置文件）
             if (!file.isMemory) {
@@ -599,6 +779,7 @@
                 renderContent(file, markdown, result.path);
                 
                 currentFile = file.id;
+                currentFileObj = file;  // 保存完整文件对象
                 updateStatus('已加载');
                 
             } catch (error) {
@@ -609,13 +790,15 @@
         // 渲染内容
         function renderContent(file, markdown, actualPath) {
             const html = marked.parse(markdown);
+            currentContent = markdown;  // 保存原始内容
+            currentFilePath = actualPath;  // 保存文件路径
             
             if (file.isMemory) {
                 // 记忆文件特殊渲染
                 document.getElementById('content').innerHTML = `
                     <div class="markdown-body">
                         <div class="memory-header">
-                            <h2>${file.title}</h2>
+                            <h2>${file.title} <button class="edit-btn" onclick="startEdit('${actualPath}')">✏️ 编辑</button></h2>
                             <div class="memory-meta">
                                 <div class="memory-meta-item">
                                     <span>📅</span>
@@ -638,7 +821,7 @@
                 // 配置文件渲染
                 document.getElementById('content').innerHTML = `
                     <div class="markdown-body">
-                        <h2>${file.title}</h2>
+                        <h2>${file.title} <button class="edit-btn" onclick="startEdit('${actualPath}')">✏️ 编辑</button></h2>
                         <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; color: #1565c0;">
                             📍 文件路径: ${actualPath}
                         </div>
@@ -698,6 +881,158 @@
                 }
             }
         });
+        
+        // ==================== 编辑功能 ====================
+        
+        // 启动编辑模式
+        function startEdit(filePath) {
+            isEditMode = true;
+            
+            document.getElementById('content').innerHTML = `
+                <div class="edit-container">
+                    <div class="edit-toolbar">
+                        <div class="edit-toolbar-left">
+                            <span style="color: #6c757d;">📍 文件路径: ${filePath}</span>
+                        </div>
+                        <div>
+                            <button class="preview-btn" onclick="togglePreview()">👁 预览</button>
+                        </div>
+                    </div>
+                    <textarea id="editor" class="editor-textarea">${escapeHtml(currentContent)}</textarea>
+                    <div class="button-group">
+                        <button class="save-btn" onclick="saveFile('${filePath}')" id="saveBtn">
+                            💾 保存提交
+                        </button>
+                        <button class="cancel-btn" onclick="cancelEdit()">
+                            ❌ 取消
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            updateStatus('编辑模式');
+        }
+        
+        // 切换预览模式
+        function togglePreview() {
+            const textarea = document.getElementById('editor');
+            const content = textarea.value;
+            
+            if (textarea.style.display === 'none') {
+                // 切换回编辑模式 - 隐藏预览div，显示textarea
+                const previewDiv = document.getElementById('preview');
+                if (previewDiv) {
+                    previewDiv.remove();
+                }
+                textarea.style.display = 'block';
+                document.querySelector('.preview-btn').textContent = '👁 预览';
+            } else {
+                // 切换到预览模式 - 隐藏textarea，显示预览div
+                const html = marked.parse(content);
+                textarea.style.display = 'none';
+                
+                // 创建预览div
+                const previewDiv = document.createElement('div');
+                previewDiv.id = 'preview';
+                previewDiv.className = 'markdown-body';
+                previewDiv.style.marginTop = '15px';
+                previewDiv.innerHTML = html;
+                textarea.parentNode.insertBefore(previewDiv, textarea.nextSibling);
+                
+                document.querySelector('.preview-btn').textContent = '✏️ 编辑';
+            }
+        }
+        
+        // 取消编辑
+        function cancelEdit() {
+            isEditMode = false;
+            currentFile = null;  // 重置以允许重新加载
+            
+            // 使用保存的文件对象重新加载
+            if (currentFileObj) {
+                loadFile(currentFileObj);
+            }
+        }
+        
+        // 保存文件
+        async function saveFile(filePath) {
+            // 密码验证
+            const password = prompt('请输入密码以确认保存操作：');
+            if (password !== '654321') {
+                showToast('❌ 密码错误，保存已取消', 'error');
+                return;
+            }
+            
+            const textarea = document.getElementById('editor');
+            const newContent = textarea.value;
+            const saveBtn = document.getElementById('saveBtn');
+            
+            // 禁用保存按钮，显示loading
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '⏳ 保存中...';
+            
+            try {
+                const response = await fetch('/api/files/write', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        path: filePath,
+                        content: newContent
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('✅ 保存成功！', 'success');
+                    currentContent = newContent;
+                    isEditMode = false;
+                    
+                    // 重置currentFile以确保重新加载
+                    currentFile = null;
+                    
+                    // 立即刷新显示
+                    if (currentFileObj) {
+                        loadFile(currentFileObj);
+                    }
+                } else {
+                    showToast('❌ 保存失败: ' + result.error, 'error');
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '💾 保存提交';
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                showToast('❌ 保存失败: ' + error.message, 'error');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '💾 保存提交';
+            }
+        }
+        
+        // 显示提示消息
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', init);
